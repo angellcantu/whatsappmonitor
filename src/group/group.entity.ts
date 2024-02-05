@@ -1,38 +1,14 @@
+import { Contact } from 'src/contact/contact.entity';
+import { Integrant } from 'src/integrant/integrant.entity';
 import { Message } from 'src/message/message.entity';
 import { Participant } from 'src/participant/participant.entity';
+import { Phone } from 'src/phone/phone.entity';
 import { User } from 'src/user/user.entity';
 import { Entity, Column, OneToMany, PrimaryGeneratedColumn, CreateDateColumn, JoinTable, ManyToOne, JoinColumn, UpdateDateColumn, OneToOne, ManyToMany } from 'typeorm';
 
 @Entity({ name: 'groups' })
-export class Group {
-    @PrimaryGeneratedColumn()
-    id: number;
-
-    @Column({ nullable: false })
-    name: string;
-
-    @ManyToMany(() => Participant, participant => participant.groups)
+export class Group extends Contact{
+    @ManyToMany(() => Integrant, integrant => integrant.groups)
     @JoinTable()
-    participants: Participant[]
-
-    // ADMIN TIENE QUE HEREDAR DE INTEGRANTS QUE TENDRA SUS ADMINS Y SUS PARTICIPANTESS
-    // @ManyToMany(() => Admin, admin => admin.groups)
-    // @JoinTable()
-    // admins: Participant[]
-
-    @Column('sqlserver-json')
-    profile: Record<string, any>;
-    
-    // @CreateDateColumn({ type: 'timestamp', default: () => 'GETDATE()' })
-    // created_at: Date;
-
-    // @UpdateDateColumn({ type: 'timestamp', default: () => 'GETDATE()', onUpdate: 'GETDATE()' })
-    // updated_at: Date;
-
-    @ManyToOne(() => User, user => user.groups)
-    @JoinColumn({ name: 'user_id' })
-    user: User;
-
-    @OneToMany(() => Message, message => message.group)
-    messages: Message[];
+    integrants: Integrant[]
 }

@@ -12,13 +12,9 @@ export class User {
     @Column({nullable: false})
     phone_number: string;
 
-    // @CreateDateColumn({ type: 'timestamp', default: () => 'GETDATE()' })
+    // @Column({ type: 'timestamp', default: () => 'GETDATE()' })
     // created_at: Date;
 
-    // @UpdateDateColumn({ type: 'timestamp', default: () => 'GETDATE()', onUpdate: 'GETDATE()' })
+    // @Column({ type: 'timestamp', default: () => 'GETDATE()', onUpdate: 'GETDATE()' })
     // updated_at: Date;
-
-    // Relacion uno a muchos de Users a Groups
-    @OneToMany(() => Group, group => group.user)
-    groups: Group[]
 }

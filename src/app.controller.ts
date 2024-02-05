@@ -1,7 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
 import { IGroup } from 'src/group/group.interface'
-// import { UserService } from './user/user.service';
 import { WhatsappService } from './whatsapp/whatsapp.service';
 
 @Controller()
@@ -13,7 +12,7 @@ export class AppController {
     ) {}
 
   @Get()
-  async getHello(): Promise<void> {
-    return this.whatsappService.getParticipantsByGroup();
+  async getHello(): Promise<any> {
+    return { message: 'Hello' } 
   }
 }

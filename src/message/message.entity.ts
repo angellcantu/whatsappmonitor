@@ -1,4 +1,5 @@
 import { join } from 'path';
+import { Conversation } from 'src/conversation/conversation.entity';
 import { Group } from 'src/group/group.entity';
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, JoinColumn, OneToOne, UpdateDateColumn } from 'typeorm';
 
@@ -6,6 +7,9 @@ import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, Jo
 export class Message {
     @PrimaryGeneratedColumn()
     id: number;
+
+    @Column()
+    string_id: string;
 
     @Column()
     content: string;
@@ -22,13 +26,13 @@ export class Message {
     @Column()
     url: string
 
-    // @CreateDateColumn({ type: 'timestamp', default: () => 'GETDATE()' })
+    // @Column({ type: 'timestamp', default: () => 'GETDATE()' })
     // created_at: Date;
 
-    // @UpdateDateColumn({ type: 'timestamp', default: () => 'GETDATE()', onUpdate: 'GETDATE()' })
+    // @Column({ type: 'timestamp', default: () => 'GETDATE()', onUpdate: 'GETDATE()' })
     // updated_at: Date;
 
-    @ManyToOne(() => Group, group => group.messages)
-    @JoinColumn({ name: 'group_id' })
-    group: Group
+    @ManyToOne(() => Conversation, conversation => conversation.messages)
+    @JoinColumn({ name: 'conversation_id' })
+    conversation: Conversation
 }
