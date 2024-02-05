@@ -11,6 +11,18 @@ export class Group {
     @Column({ nullable: false })
     name: string;
 
+    @ManyToMany(() => Participant, participant => participant.groups)
+    @JoinTable()
+    participants: Participant[]
+
+    // ADMIN TIENE QUE HEREDAR DE INTEGRANTS QUE TENDRA SUS ADMINS Y SUS PARTICIPANTESS
+    // @ManyToMany(() => Admin, admin => admin.groups)
+    // @JoinTable()
+    // admins: Participant[]
+
+    @Column('sqlserver-json')
+    profile: Record<string, any>;
+    
     // @CreateDateColumn({ type: 'timestamp', default: () => 'GETDATE()' })
     // created_at: Date;
 
@@ -23,8 +35,4 @@ export class Group {
 
     @OneToMany(() => Message, message => message.group)
     messages: Message[];
-
-    @ManyToMany(() => Participant, participant => participant.groups)
-    @JoinTable()
-    participants: Participant[]
 }
