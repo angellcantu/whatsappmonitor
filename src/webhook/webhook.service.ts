@@ -9,10 +9,11 @@ export class WebhookService {
     private async assignWebhook(): Promise<void> {
         try {
             const url_webehook = {
-                webhook: "https://myserver.com/send/callback/here"
-            } // URL  del  server
+                webhook: "https://whatsappmonitor.onrender.com/webhook"
+            }
 
             const url = `${process.env.INSTANCE_URL}/${process.env.PRODUCT_ID}/setWebhook`;
+            console.log(url);
             const response = await rp(url, {
                 method: 'post',
                 json: true,
@@ -29,4 +30,6 @@ export class WebhookService {
             throw new Error(error);
         }
     }
+
+    
 }
