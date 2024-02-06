@@ -6,8 +6,8 @@ import { WebhookService } from "./webhook.service";
 export class WebhookController {
     constructor(private readonly webhookService: WebhookService) { }
 
-    // @Get()
-    // hanldeWebhook(@Body() payload: any) {
+    // @Post()
+    // posthanldeWebhook(@Body() payload: any) {
     //     console.log('Payload recibido: ', payload)
     //     // AQUI VAMOS A RECIBIR TODAS LAS PETICIONES DEL WEBHOOK
     //     return {message: 'Se recibio el webhook'}

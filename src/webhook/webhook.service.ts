@@ -4,7 +4,7 @@ import { Inject, Injectable } from '@nestjs/common';
 @Injectable()
 export class WebhookService {
     constructor() {
-        this.assignWebhook();
+        // this.assignWebhook();
     }
     private async assignWebhook(): Promise<void> {
         try {
