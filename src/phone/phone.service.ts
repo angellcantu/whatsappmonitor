@@ -60,4 +60,21 @@ export class PhoneService {
 
         return phone;
     }
+
+    async deletePhone(phone_id: number): Promise<Phone> {
+        let phone: Phone;
+        try {
+            phone = await this.phoneRepository.findOne({ where: { phone_id: phone_id } })
+
+            if (!phone) {
+                console.log("Telefono no encontrado")
+                return;
+            }
+            await this.phoneRepository.remove(phone);
+        } catch (error) {
+            console.log(error);
+        }
+
+        return phone;
+    }
 }
