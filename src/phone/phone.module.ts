@@ -6,8 +6,8 @@ import { PhoneService } from './phone.service';
 
 @Module({
     imports: [TypeOrmModule.forFeature([Phone])],
-    controllers: [],
-    providers: [PhoneService]
+    providers: [PhoneService],
+    exports: [PhoneService]
 })
 
 export class PhoneModule {}

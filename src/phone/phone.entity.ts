@@ -1,24 +1,26 @@
 import { group } from 'console';
 import { Contact } from 'src/contact/contact.entity';
 import { Group } from 'src/group/group.entity';
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinColumn, OneToOne, JoinTable, Check, OneToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, Unique, JoinColumn, OneToMany } from 'typeorm';
 
 @Entity({ name: 'phones' })
+@Unique(['number', 'phone_id'])
 export class Phone {
     @PrimaryGeneratedColumn()
     id: number;
-
+    @Column()
+    phone_id: number;
     @Column()
     number: string;
     @Column()
     status: string;
     @Column()
     type: string;
-    @Column()
+    @Column({nullable: true})
     name: string;
-    @Column({ type: 'nvarchar', length: 'max' })
+    @Column({ type: 'nvarchar', length: 'max' , nullable: true})
     data: Record<string, any>;
-    @Column()
+    @Column({nullable: true})
     mult_device: boolean;
 
     // @Column({ type: 'timestamp', default: () => 'GETDATE()' })
