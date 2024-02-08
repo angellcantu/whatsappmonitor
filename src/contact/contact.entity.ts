@@ -1,26 +1,23 @@
 import { Conversation } from 'src/conversation/conversation.entity';
-import { Integrant } from 'src/integrant/integrant.entity';
-import { Message } from 'src/message/message.entity';
-import { Participant } from 'src/participant/participant.entity';
 import { Phone } from 'src/phone/phone.entity';
-import { User } from 'src/user/user.entity';
-import { Entity, Column, OneToMany, PrimaryGeneratedColumn, TableInheritance, JoinTable, ManyToOne, JoinColumn, UpdateDateColumn, OneToOne, ManyToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, JoinTable, ManyToOne, JoinColumn, UpdateDateColumn, OneToOne, ManyToMany } from 'typeorm';
 
 @Entity({ name: 'contacts' })
-@TableInheritance({ column: { type: 'varchar', name: 'type' } })
-
 export class Contact {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column()
-    string_id: string;
+    @Column({unique: true})
+    contact_id: string;
 
-    @Column({ nullable: false })
+    @Column({ nullable: true })
     name: string;
 
-    @Column({ type: 'nvarchar', length: 'max' })
-    config: Record<string, any>;
+    @Column({ type: 'nvarchar', length: 'max' , nullable: true})
+    image: Record<string, any>;
+
+    @Column({ type: 'varchar', name: 'type' })
+    type: string;
 
     // @Column({ type: 'timestamp', default: () => 'GETDATE()' })
     // created_at: Date;

@@ -1,10 +1,7 @@
-import { Message } from "src/message/message.entity";
-import { IParticipant } from "src/participant/participant.interface";
+import { IContact } from "src/contact/contact.interface";
+import { Integrant } from "src/integrant/integrant.entity";
 
-export interface IGroup {
-    id: string;
-    name: string;
-    participants: IParticipant[];
-    messages: Message[]
+export interface IGroup extends IContact {
+    integrants?: Integrant[];
     [config: string]: any
   }

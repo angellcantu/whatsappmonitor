@@ -2,11 +2,12 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { WhatsappService } from './whatsapp.service';
 import { PhoneService } from 'src/phone/phone.service';
+import { ContactService } from 'src/contact/contact.service';
 
 @Module({
-    imports: [PhoneService],
+    imports: [PhoneService,  ContactService],
     controllers: [],
-    providers: [WhatsappService, PhoneService]
+    providers: [WhatsappService, PhoneService, ContactService]
 })
 
 export class WhatsappModule {}

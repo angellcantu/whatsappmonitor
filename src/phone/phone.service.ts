@@ -11,6 +11,17 @@ export class PhoneService {
         private phoneRepository: Repository<Phone>
     ) { }
 
+    async findAllPhoneIds(): Promise<string[]> {
+        const phones = await this.findAllPhones();
+        let phoneIds: string[] = [];
+
+        phones.forEach(phone => {
+            phoneIds.push(phone.phone_id.toString());
+        });
+
+        return phoneIds;
+    }
+
     async findAllPhones(): Promise<Phone[]> {
         return await this.phoneRepository.find();
     }
