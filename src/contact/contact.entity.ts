@@ -2,7 +2,7 @@ import { Conversation } from 'src/conversation/conversation.entity';
 import { Phone } from 'src/phone/phone.entity';
 import { Entity, Column, PrimaryGeneratedColumn, JoinTable, ManyToOne, JoinColumn, UpdateDateColumn, OneToOne, ManyToMany } from 'typeorm';
 
-@Entity({ name: 'contacts' })
+@Entity()
 export class Contact {
     @PrimaryGeneratedColumn()
     id: number;

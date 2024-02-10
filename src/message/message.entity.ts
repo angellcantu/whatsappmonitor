@@ -1,30 +1,35 @@
 import { join } from 'path';
 import { Conversation } from 'src/conversation/conversation.entity';
-import { Group } from 'src/group/group.entity';
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, JoinColumn, OneToOne, UpdateDateColumn } from 'typeorm';
+import { Integrant } from 'src/integrant/integrant.entity';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToOne, UpdateDateColumn } from 'typeorm';
 
-@Entity({ name: 'messages' })
+@Entity()
 export class Message {
     @PrimaryGeneratedColumn()
     id: number;
 
     @Column()
-    string_id: string;
-
+    uuid: string;
     @Column()
-    content: string;
-
-    @Column()
-    participant_id: number
-
-    @Column()
-    provider_id: string
-
-    @Column()
-    message_type: string
-
-    @Column()
-    url: string
+    type: string;
+    @Column({nullable: true})
+    text: string;
+    @Column({nullable: true})
+    url: string;
+    @Column({nullable: true})
+    mime: string;
+    @Column({nullable: true})
+    filename: string;
+    @Column({nullable: true})
+    caption: string;
+    @Column({nullable: true})
+    payload: string;
+    @Column({nullable: true})
+    subtype: string;
+    @Column({nullable: true})
+    participant: string;
+    @Column({nullable: true})
+    _serialized: string;
 
     // @Column({ type: 'timestamp', default: () => 'GETDATE()' })
     // created_at: Date;
@@ -33,6 +38,10 @@ export class Message {
     // updated_at: Date;
 
     @ManyToOne(() => Conversation, conversation => conversation.messages)
-    @JoinColumn({ name: 'conversation_id' })
+    @JoinColumn()
     conversation: Conversation
+
+    @ManyToOne(() => Integrant, integrant => integrant.messages)
+    @JoinColumn({name: 'uuid'})
+    integrant: Integrant
 }

@@ -8,9 +8,15 @@ import { WhatsappService } from './whatsapp/whatsapp.service';
 import { PhoneModule } from './phone/phone.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Contact } from './contact/contact.entity';
-import { Chat } from './chat/chat.entity';
 import { ContactModule } from './contact/contact.module';
 import { Group } from './group/group.entity';
+import { Integrant } from './integrant/integrant.entity';
+import { IntegrantService } from './integrant/integrant.service';
+import { GroupService } from './group/group.service';
+import { MessageService } from './message/message.service';
+import { Message } from './message/message.entity';
+import { ConversationService } from './conversation/conversation.service';
+import { Conversation } from './conversation/conversation.entity';
 
 @Module({
   imports: [
@@ -18,7 +24,7 @@ import { Group } from './group/group.entity';
     PhoneModule,
     ContactModule,
     TypeOrmModule.forFeature(
-      [Contact, Chat, Group]
+      [Contact, Group, Integrant, Message, Conversation]
     )
   ],
   controllers: [AppController, WebhookController],
@@ -26,6 +32,10 @@ import { Group } from './group/group.entity';
     AppService,
     WebhookService,
     WhatsappService,
+    IntegrantService,
+    GroupService,
+    MessageService,
+    ConversationService
   ],
 })
 export class AppModule { }

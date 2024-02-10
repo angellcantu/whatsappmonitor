@@ -26,39 +26,32 @@ export class PhoneService {
         return await this.phoneRepository.find();
     }
 
-    async createPhone(_phone: IPhone): Promise<void> {
+    async createPhone(_phone: IPhone): Promise<Phone | undefined> {
         try {
-            const phone = this.phoneRepository.create(
-                {
-                    phone_id: _phone.phone_id,
-                    number: _phone.number,
-                    status: _phone.status,
-                    type: _phone.type,
-                    name: _phone.name,
-                    data: _phone.data,
-                    mult_device: _phone.multi_device
-                }
-            )
-            await this.phoneRepository.save(phone)
+            const phone: Phone = await this.phoneRepository.create({
+                phone_id: _phone.phone_id,
+                number: _phone.number,
+                status: _phone.status,
+                type: _phone.type,
+                name: _phone.name, 
+                data: _phone.data,
+                mult_device: _phone.multi_device
+            });
+
+            return await this.phoneRepository.save(phone)
         } catch (error) {
             console.log(error)
         }
     }
 
-    async createPhones(phones: any[]): Promise<void> {
-        phones.forEach(phone => {
-            const phoneInterface: IPhone = {
-                phone_id: phone.id,
-                number: phone.number,
-                status: phone.status,
-                type: phone.type,
-                name: phone.name,
-                data: JSON.stringify(phone.data),
-                multi_device: phone.multi_device
+    async createPhones(_phones: IPhone[]): Promise<void> {
+        try {
+            for (const phone of _phones) {
+                await this.createPhone(phone);
             }
-
-            this.createPhone(phoneInterface);
-        });
+        } catch (error) {
+            console.log(error);
+        }
     }
 
     async findPhone(phone_id: number): Promise<Phone> {

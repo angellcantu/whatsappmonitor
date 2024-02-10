@@ -18,8 +18,13 @@ export class WebhookController {
 
     @Get()
     async hanldeWebhook() {
-        const listPhone = await this.whatsappService.loadImagesInContacts();
+        console.log("hoaaaa")
+        // await this.whatsappService.loadPhoneList();
+        // await this.whatsappService.loadContacts();
+        await this.whatsappService.loadGroupsIntegrants();
 
-        return { listPhone }
+        // await this.whatsappService.loadGroupConversations();
+
+        return {  }
     }
 }

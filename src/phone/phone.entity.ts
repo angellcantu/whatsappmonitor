@@ -3,14 +3,13 @@ import { Contact } from 'src/contact/contact.entity';
 import { Group } from 'src/group/group.entity';
 import { Entity, Column, PrimaryGeneratedColumn, Unique, JoinColumn, OneToMany } from 'typeorm';
 
-@Entity({ name: 'phones' })
-@Unique(['number', 'phone_id'])
+@Entity()
 export class Phone {
     @PrimaryGeneratedColumn()
     id: number;
-    @Column()
+    @Column({unique: true})
     phone_id: number;
-    @Column()
+    @Column({unique: true})
     number: string;
     @Column()
     status: string;
@@ -35,5 +34,3 @@ export class Phone {
     @JoinColumn()
     contacts: Contact[]
 }
-// ESTO VA A LLAMAR AL API DE:
-// https://api.maytapi.com/api/924cff3b-2265-4373-a78d-2f71036c9446/listPhones
