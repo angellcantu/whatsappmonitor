@@ -113,7 +113,7 @@ export class WhatsappService {
 
     async loadGroupsIntegrants(): Promise<void> {
         // Los grupos son contactos y los cargo de aqui
-        const groupIds: string[] = (await this.contactService.getGroupsId()).slice(0, 2);
+        const groupIds: string[] = (await this.contactService.getGroupsId());
         // const groupIds2: string[] = groupIds.slice(0, 2)
         const phoneIds: string[] = await this.phoneService.findAllPhoneIds();
 
@@ -136,6 +136,7 @@ export class WhatsappService {
 
                 const createdGroup: Group = await this.groupService.createGroup(_group);
                 const _integrants: IIntegrant[] = [];
+                // Validar que tenga admins
                 for (const admin of groupData.admins) {
                     const contact: Contact = await this.contactService.findOne(admin);
                     _integrants.push({
@@ -145,6 +146,7 @@ export class WhatsappService {
                         type: 'admin'
                     });
                 }
+                // Vaidar que tenga participants
                 for (const participants of groupData.participants) {
                     const contact: Contact = await this.contactService.findOne(participants);
                     _integrants.push({
