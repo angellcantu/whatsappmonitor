@@ -18,8 +18,6 @@ import { IContact } from "src/contact/contact.interface";
 import { IIntegrant } from "src/integrant/IIntegrant.interface";
 import { IntegrantService } from "src/integrant/integrant.service";
 import { Integrant } from "src/integrant/integrant.entity";
-import { getConnection, getManager } from "typeorm";
-import { getConnectionToken } from "@nestjs/typeorm";
 import { Group } from "src/group/group.entity";
 
 @Injectable()
@@ -134,33 +132,40 @@ export class WhatsappService {
                     // config: undefined  # Revisar como guardar este
                 }
 
-                const createdGroup: Group = await this.groupService.createGroup(_group);
+                let createdGroup: Group = await this.groupService.createGroup(_group);
                 const _integrants: IIntegrant[] = [];
                 // Validar que tenga admins
-                for (const admin of groupData.admins) {
-                    const contact: Contact = await this.contactService.findOne(admin);
-                    _integrants.push({
-                        integrant_id: admin,
-                        name: contact.name,
-                        phone_number: admin.substring(0, 10),
-                        type: 'admin'
-                    });
-                }
-                // Vaidar que tenga participants
-                for (const participants of groupData.participants) {
-                    const contact: Contact = await this.contactService.findOne(participants);
-                    _integrants.push({
-                        integrant_id: participants,
-                        name: contact.name,
-                        phone_number: participants.substring(0, 10),
-                        type: 'participant'
-                    })
+                if (groupData.admins > 0) {
+                    for (const admin of groupData.admins) {
+                        const contact: Contact = await this.contactService.findOne(admin);
+                        _integrants.push({
+                            integrant_id: admin,
+                            name: contact.name,
+                            phone_number: admin.substring(0, 10),
+                            type: 'admin'
+                        });
+                    }
                 }
 
-                const integrants: Integrant[] = await this.integrantService.createIntegrantsLoad(_integrants);
-                createdGroup.integrants = integrants;
-                console.log('Este es el id del grupo: ', createdGroup.id)
-                await this.groupService.saveIntegrantsInGroup(createdGroup);
+                if (groupData.participants) {
+                    // Vaidar que tenga participants
+                    for (const participants of groupData.participants) {
+                        const contact: Contact = await this.contactService.findOne(participants);
+                        _integrants.push({
+                            integrant_id: participants,
+                            name: contact.name,
+                            phone_number: participants.substring(0, 10),
+                            type: 'participant'
+                        })
+                    }
+                }
+
+                let integrants: Integrant[];
+                if (_integrants.length > 0){
+                    integrants = await this.integrantService.createIntegrantsLoad(_integrants);
+                    // createdGroup.integrants = integrants;
+                    // await this.groupService.saveIntegrantsInGroup(createdGroup);
+                }
             }
         }
     }
