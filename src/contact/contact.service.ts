@@ -6,6 +6,7 @@ import { IContact } from "./contact.interface";
 import { Group } from "src/group/group.entity";
 import { GroupService } from "src/group/group.service";
 import { Phone } from "src/phone/phone.entity";
+import { Conversation } from "src/conversation/conversation.entity";
 
 @Injectable()
 export class ContactService {
@@ -19,7 +20,11 @@ export class ContactService {
     }
 
     async findOne(contact_id: string): Promise<Contact | undefined> {
-        return await this.contactRepository.findOne({ where: { contact_id } })
+        try {
+            return await this.contactRepository.findOne({ where: { contact_id } });
+        } catch (error) {
+            console.log(error);
+        }
     }
 
     async createContact(_contact: IContact): Promise<Contact | undefined> {
@@ -35,6 +40,14 @@ export class ContactService {
             return await this.contactRepository.save(contact);
         } catch (error) {
             console.log(error)
+        }
+    }
+
+    async saveConversationInContact(contact: Contact) {
+        try {
+            await this.contactRepository.save(contact);
+        } catch (error) {
+            console.log(error);
         }
     }
 
@@ -60,7 +73,7 @@ export class ContactService {
 
     async getGroupsId(): Promise<string[]> {
         const groupsContact: Contact[] = await this.contactRepository.find({ where: { type: "group" } });
-        const groupsName: string[] = groupsContact.map(contact => contact.contact_id);
+        const groupsName: string[] = await groupsContact.map(contact => contact.contact_id);
         return groupsName;
     }
 

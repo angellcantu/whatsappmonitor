@@ -1,4 +1,5 @@
 import { join } from 'path';
+import { Contact } from 'src/contact/contact.entity';
 import { Conversation } from 'src/conversation/conversation.entity';
 import { Integrant } from 'src/integrant/integrant.entity';
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToOne, UpdateDateColumn } from 'typeorm';
@@ -41,7 +42,7 @@ export class Message {
     @JoinColumn()
     conversation: Conversation
 
-    @ManyToOne(() => Integrant, integrant => integrant.messages)
-    @JoinColumn({name: 'uuid'})
-    integrant: Integrant
+    @ManyToOne(() => Contact, contact => contact.messages)
+    @JoinColumn()
+    contact: Contact
 }

@@ -19,6 +19,8 @@ import { IIntegrant } from "src/integrant/IIntegrant.interface";
 import { IntegrantService } from "src/integrant/integrant.service";
 import { Integrant } from "src/integrant/integrant.entity";
 import { Group } from "src/group/group.entity";
+import { Message } from "src/message/message.entity";
+import { IMessage } from "src/message/message.interface";
 
 @Injectable()
 export class WhatsappService {
@@ -110,21 +112,15 @@ export class WhatsappService {
     }
 
     async loadGroupsIntegrants(): Promise<void> {
-        // Los grupos son contactos y los cargo de aqui
         const groupIds: string[] = (await this.contactService.getGroupsId());
-        // const groupIds2: string[] = groupIds.slice(0, 2)
         const phoneIds: string[] = await this.phoneService.findAllPhoneIds();
 
         for (const id of phoneIds) {
             for (const contact_id of groupIds) {
                 const groupInfo: any = await this.Apiconnection(`${id}/getGroups/${contact_id}`);
 
-                if (!groupInfo.success || groupInfo.data <= 0) {
-                    return;
-                }
+                if (!groupInfo.success || groupInfo.data <= 0) { return; }
                 const groupData: any = groupInfo.data;
-
-
                 const _group: IGroup = {
                     id_group: contact_id,
                     name: groupData.name,
@@ -132,7 +128,9 @@ export class WhatsappService {
                     // config: undefined  # Revisar como guardar este
                 }
 
-                let createdGroup: Group = await this.groupService.createGroup(_group);
+                if (_group.name === null || _group.name === "") { return; }
+
+                const createdGroup: Group = await this.groupService.createGroup(_group);
                 const _integrants: IIntegrant[] = [];
                 // Validar que tenga admins
                 if (groupData.admins > 0) {
@@ -142,7 +140,8 @@ export class WhatsappService {
                             integrant_id: admin,
                             name: contact.name,
                             phone_number: admin.substring(0, 10),
-                            type: 'admin'
+                            type: 'admin',
+                            groups: [createdGroup]
                         });
                     }
                 }
@@ -155,16 +154,15 @@ export class WhatsappService {
                             integrant_id: participants,
                             name: contact.name,
                             phone_number: participants.substring(0, 10),
-                            type: 'participant'
+                            type: 'participant',
+                            groups: [createdGroup]
                         })
                     }
                 }
 
                 let integrants: Integrant[];
-                if (_integrants.length > 0){
+                if (_integrants.length > 0) {
                     integrants = await this.integrantService.createIntegrantsLoad(_integrants);
-                    // createdGroup.integrants = integrants;
-                    // await this.groupService.saveIntegrantsInGroup(createdGroup);
                 }
             }
         }
@@ -174,34 +172,90 @@ export class WhatsappService {
         // Traer los nombres de los grupos
         const phoneIds: string[] = await this.phoneService.findAllPhoneIds();
 
-        const groupIds: string[] = (await this.contactService.getGroupsId()).slice(0, 1);
+        const groupIds: string[] = ((await this.contactService.getGroupsId()));
         for (const id of phoneIds) {
             for (const contact_id of groupIds) {
-                const conversationInfo: any = await this.Apiconnection(`${id}/getConversations/${contact_id}`);
-                console.log(conversationInfo)
 
-                if (await this.conversationService.existsConversation(contact_id)) {
-                    return;
+                let conversationInfo: any;
+                // const conversationInfo: any = await this.Apiconnection(`${id}/getConversations/${contact_id}`);
+                try {
+                    conversationInfo = await this.Apiconnection(`${id}/getConversations/${contact_id}`);
+                } catch (error) {
+                    console.log('No se pudo traer la info de la conversacion');
+                    console.log(error);
                 }
-                // Crea conversaciones sin mensajes ni contactos
-                const Iconversation: IConversation = { id_conversation: contact_id }
-                const conversation: Conversation = await this.conversationService.createConversation(Iconversation);
 
-                if (!conversationInfo.succes || conversationInfo.data <= 0) {
-                    return;
+                try {
+                    if (!conversationInfo.success || conversationInfo.data.length <= 0) {
+                        const conversation: Conversation = new Conversation();
+                        conversation.id_conversation = contact_id;
+
+                        await this.conversationService.createConversation(conversation);
+                        return;
+                    }
+
+                    const conversationData: any = conversationInfo.data;
+                    const _messages: Message[] = [];
+                    if (conversationData.messages.length > 0) {
+                        for (const message of conversationData.messages) {
+                            if (await this.validateMessageType(message)) { continue; }
+
+                            const newMessage: IMessage = await this.messageAttributes(message)
+                            console.log(newMessage)
+                            _messages.push(await this.messageService.createMessage(newMessage));
+                        }
+                    }
+
+                    const Iconversation: IConversation = {
+                        id_conversation: contact_id,
+                        messages: _messages
+                    }
+
+                    console.log(Iconversation)
+                    const conversation: Conversation = await this.conversationService.createConversation(Iconversation);
+
+                    if (conversationData.participants.length > 0) {
+                        console.log(conversationData.participants);
+                        for (const participant of conversationData.participants) {
+                            const contact: Contact = await this.contactService.findOne(participant.id);
+                            contact.conversations = [conversation];
+                            await this.contactService.saveConversationInContact(contact);
+                        }
+                    }
+                } catch (error) {
+                    console.log(error)
                 }
-                // const conversationData: any = conversationInfo.data;
-                // const messages: any = conversationData.messages;
-
-                // await this.messageService.createMessages(messages);
-                // Hay que traer las conversaciones de los gruposs
-                // que esten activos
-                // 
             }
         }
     }
 
     // Private methods
+    private async validateMessageType(message: any): Promise<boolean> {
+        const type: string = message?.message?.type;
+        if (type === "info") { return true; }
+
+        return false;
+    }
+
+    private async messageAttributes(messageInfo: any): Promise<IMessage> {
+        const message: IMessage = {
+            contact: await this.contactService.findOne(messageInfo.uid),
+            uuid: messageInfo?.uid,
+            type: messageInfo?.message?.type,
+            text: messageInfo?.message?.text ?? null,
+            url: messageInfo?.message?.url ?? null,
+            mime: messageInfo?.message?.mime ?? null,
+            filename: messageInfo?.message?.filename ?? null,
+            caption: messageInfo?.message?.caption ?? null,
+            payload: messageInfo?.message?.payload ?? null,
+            subtype: messageInfo?.mesage?.subtype ?? null,
+            participant: messageInfo?.message?.participant?._serialized ?? null,
+            _serialized: messageInfo?.message?._serialized ?? null
+        }
+
+        return message;
+    }
+
     private async Apiconnection(endpoint: string): Promise<any> {
         try {
             const url = `${process.env.INSTANCE_URL}/${process.env.PRODUCT_ID}/`

@@ -25,6 +25,14 @@ export class Conversation {
     messages: Message[];
 
     @ManyToMany(() => Contact, contact => contact.conversations, { nullable: true })
-    @JoinTable()
-    contacts: Contact[]
+    @JoinTable({
+      name: 'conversation_contact',
+      joinColumn: {
+        name: 'conversation_id',
+      },
+      inverseJoinColumn: {
+        name: 'contact_id',
+      }
+    })
+    contacts: Contact[];
 }

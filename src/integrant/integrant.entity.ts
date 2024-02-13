@@ -9,7 +9,7 @@ export class Integrant {
   id: number;
 
   @Column({ nullable: false })
-  integrant_id: string;
+  id_integrant: string;
 
   @Column({ nullable: true })
   name: string;
@@ -22,21 +22,12 @@ export class Integrant {
     name: 'group_integrant',
     joinColumn: {
       name: 'integrant_id',
-      referencedColumnName: 'id'
     },
     inverseJoinColumn: {
       name: 'group_id',
-      referencedColumnName: 'id'
     }
   })
   groups: Group[];
-
-  // @OneToMany(() => Group, group => group.integrants)
-  // @JoinColumn({name: 'id_group'})
-  // groups: Group[];
-
-  // @Column({nullable: true})
-  // id_group: number
 
   @Column({ nullable: false })
   type: string;
@@ -46,7 +37,7 @@ export class Integrant {
   // @Column({ type: 'timestamp', default: () => 'GETDATE()', onUpdate: 'GETDATE()' })
   // updated_at: Date;
 
-  @OneToMany(() => Message, message => message.integrant, { nullable: true })
-  @JoinColumn({ name: 'integrant_id' })
-  messages: Message[]
+  // @OneToMany(() => Message, message => message.integrant, { nullable: true })
+  // @JoinColumn()
+  // messages: Message[]
 }

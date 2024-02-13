@@ -1,19 +1,20 @@
 import { Conversation } from 'src/conversation/conversation.entity';
+import { Message } from 'src/message/message.entity';
 import { Phone } from 'src/phone/phone.entity';
-import { Entity, Column, PrimaryGeneratedColumn, JoinTable, ManyToOne, JoinColumn, UpdateDateColumn, OneToOne, ManyToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, JoinTable, ManyToOne, JoinColumn, UpdateDateColumn, OneToOne, ManyToMany, OneToMany } from 'typeorm';
 
 @Entity()
 export class Contact {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column({unique: true})
+    @Column({ unique: true })
     contact_id: string;
 
     @Column({ nullable: true })
     name: string;
 
-    @Column({ type: 'nvarchar', length: 'max' , nullable: true})
+    @Column({ type: 'nvarchar', length: 'max', nullable: true })
     image: Record<string, any>;
 
     @Column({ type: 'varchar', name: 'type' })
@@ -30,7 +31,22 @@ export class Contact {
     @JoinColumn()
     phone: Phone
 
-    @ManyToMany(() => Conversation, conversation => conversation.contacts)
-    @JoinTable()
+    // @ManyToMany(() => Conversation, conversation => conversation.contacts)
+    // @JoinTable()
+    // conversations: Conversation[]
+
+    @ManyToMany(() => Conversation, conversation => conversation.contacts, { nullable: true })
+    @JoinTable({
+        name: 'conversation_contact',
+        joinColumn: {
+            name: 'contact_id',
+        },
+        inverseJoinColumn: {
+            name: 'conversation_id',
+        }
+    })
     conversations: Conversation[]
+
+    @OneToMany(() => Message, message => message.contact)
+    messages: Message[]
 }

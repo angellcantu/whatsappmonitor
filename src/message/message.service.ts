@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Message } from './message.entity'
-import { IMessage } from "./message.interface";import { Integrant } from "src/integrant/integrant.entity";
+import { IMessage } from "./message.interface"; import { Integrant } from "src/integrant/integrant.entity";
 import { IntegrantService } from "src/integrant/integrant.service";
 
 @Injectable()
@@ -22,6 +22,29 @@ export class MessageService {
             // const message: Message = {
             //     message_id: 
             // }
+        }
+    }
+
+    async createMessage(_message: IMessage | undefined) {
+        try {
+            const message: Message = await this.messageRepository.create({
+                uuid: _message.uuid,
+                type: _message.type,
+                text: _message.text,
+                url: _message.url,
+                mime: _message.mime,
+                filename: _message.filename,
+                caption: _message.caption,
+                payload: _message.payload,
+                subtype: _message.subtype,
+                participant: _message.participant,
+                _serialized: _message._serialized,
+                contact: _message.contact
+            });
+
+            return await this.messageRepository.save(message);
+        } catch (error) {
+            console.log(error);
         }
     }
 

@@ -1,3 +1,5 @@
+import { Contact } from "src/contact/contact.entity";
+
 export interface IMessage {
   uuid: string;
   type:
@@ -21,4 +23,5 @@ export interface IMessage {
   subtype?: string;
   participant?: string;
   _serialized: string;
+  contact: Contact;
 }

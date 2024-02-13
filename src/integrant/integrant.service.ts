@@ -17,13 +17,13 @@ export class IntegrantService {
     ) { }
 
     async findOne(integrant_id: string): Promise<Integrant> {
-        const integrant: Integrant = await this.integrantRepository.findOne({ where: { integrant_id: integrant_id } })
+        const integrant: Integrant = await this.integrantRepository.findOne({ where: { id_integrant: integrant_id } })
         return integrant;
     }
 
     async existsIntegrant(integrant_id): Promise<boolean> {
         try {
-            const integrant = await this.integrantRepository.findOne({ where: { integrant_id } });
+            const integrant = await this.integrantRepository.findOne({ where: { id_integrant: integrant_id } });
             return integrant ? true : false;
         } catch (error) {
             console.log("no existe el integrante")
@@ -42,15 +42,16 @@ export class IntegrantService {
     async createIntegrant(_integrant: IIntegrant): Promise<Integrant | undefined> {
         try {
             const integrant: Integrant = await this.integrantRepository.create({
-                integrant_id: _integrant.integrant_id,
+                id_integrant: _integrant.integrant_id,
                 name: _integrant.name,
                 phone_number: _integrant.phone_number,
-                type: _integrant.type
+                type: _integrant.type,
+                groups: _integrant.groups
             });
             if (await this.existsByPhoneNumber(_integrant.phone_number)) {
                 return await this.integrantRepository.findOne(
                     {
-                        where: { integrant_id: _integrant.integrant_id }
+                        where: { id_integrant: _integrant.integrant_id }
                     }
                 )
             }
@@ -79,7 +80,7 @@ export class IntegrantService {
                     await this.createIntegrant(integrant)
                 );
             }
-            return integrants;
+            return await integrants;
         } catch (error) {
             console.log(error)
         }

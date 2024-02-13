@@ -77,7 +77,7 @@ export class GroupService {
     async saveIntegrantsInGroup(group: Group): Promise<void>{
         try {
             console.log('Sigue siendo el id: ', group.id);
-            await this.groupRepository.update(group.id, group)
+            await this.groupRepository.save(group)
         } catch (error) {
             console.log(error);
         }

@@ -20,19 +20,13 @@ export class Group {
         name: 'group_integrant',
         joinColumn: {
             name: 'group_id',
-            referencedColumnName: 'id'
         },
         inverseJoinColumn: {
             name: 'integrant_id',
-            referencedColumnName: 'id'
         }
     })
     integrants: Integrant[]
 
     @Column({ nullable: true })
     id_integrant: number
-
-    // @OneToMany(() => Integrant, integrant => integrant.groups)
-    // @JoinColumn({name: 'id_integrant'})
-    // integrants: Integrant[]
 }
