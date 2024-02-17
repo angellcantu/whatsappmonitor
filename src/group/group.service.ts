@@ -3,17 +3,48 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Group } from './group.entity'
 import { IGroup } from "./group.interface";
-import { Integrant } from "src/integrant/integrant.entity";
 import { IntegrantService } from "src/integrant/integrant.service";
-import { query } from "express";
+import { GroupQueries } from "./group.queries";
+import { Message } from "src/message/message.entity";
+import { MessageService } from "src/message/message.service";
 
 @Injectable()
 export class GroupService {
     constructor(
         @InjectRepository(Group)
         private groupRepository: Repository<Group>,
-        private readonly integrantService: IntegrantService
+        private readonly integrantService: IntegrantService,
+        private readonly messageService: MessageService        
     ) { }
+
+    async findAllGroups(): Promise<Group[] | undefined> {
+        try {
+            return await this.groupRepository.find();
+        } catch (error) {
+            // Revisar que retornar
+            return error;
+        }
+    }
+
+    async findGroupsWithIntegrants() {
+        try {
+            const groups: Group[] = await this.groupRepository.find({ relations: ['integrants'] });
+
+            return groups;
+        } catch (erorr) {
+
+        }
+    }
+
+    async getGroupMessages(id_group: string): Promise<Message[]> {
+        try {
+            const messages: Message[] = await this.messageService.getMessageByGroup(id_group);
+
+            return messages;
+        } catch(error){
+            console.log(error);
+        }
+    }
 
     async createGroup(_group: IGroup): Promise<Group | undefined> {
         try {
@@ -42,7 +73,6 @@ export class GroupService {
         } catch (error) {
             console.log("Error interno al buscar el chat");
         }
-
     }
 
     async createLoadGroup(_group: any): Promise<void> {
@@ -74,7 +104,7 @@ export class GroupService {
             console.log(error)
         }
     }
-    async saveIntegrantsInGroup(group: Group): Promise<void>{
+    async saveIntegrantsInGroup(group: Group): Promise<void> {
         try {
             console.log('Sigue siendo el id: ', group.id);
             await this.groupRepository.save(group)

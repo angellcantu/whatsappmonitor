@@ -48,6 +48,19 @@ export class MessageService {
         }
     }
 
+    async getMessageByGroup(id_group: string): Promise<Message[]> {
+        try {
+            const groupMessage: Message[] = await this.messageRepository.find({
+                relations: ['contact'],
+                where: { conversation: { id_conversation: id_group } }
+            });
+
+            return groupMessage;
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
     private async typeMessageInfo(_message: any | undefined) {
         const integrant: Integrant = await this.integrantService.findOne(_message.uuid)
         // const message: Message = {

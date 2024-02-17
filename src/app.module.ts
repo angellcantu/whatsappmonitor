@@ -17,6 +17,9 @@ import { MessageService } from './message/message.service';
 import { Message } from './message/message.entity';
 import { ConversationService } from './conversation/conversation.service';
 import { Conversation } from './conversation/conversation.entity';
+import { GroupController } from './group/group.controller';
+import { GroupQueries } from './group/group.queries';
+import { IntegrantQueries } from './integrant/integrant.queries';
 
 @Module({
   imports: [
@@ -27,7 +30,7 @@ import { Conversation } from './conversation/conversation.entity';
       [Contact, Group, Integrant, Message, Conversation]
     )
   ],
-  controllers: [AppController, WebhookController],
+  controllers: [AppController, WebhookController,  GroupController],
   providers: [
     AppService,
     WebhookService,
@@ -35,7 +38,9 @@ import { Conversation } from './conversation/conversation.entity';
     IntegrantService,
     GroupService,
     MessageService,
-    ConversationService
+    ConversationService,
+    IntegrantQueries,
+    GroupQueries
   ],
 })
 export class AppModule { }

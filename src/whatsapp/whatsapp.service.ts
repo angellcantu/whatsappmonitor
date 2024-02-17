@@ -133,6 +133,8 @@ export class WhatsappService {
                 const createdGroup: Group = await this.groupService.createGroup(_group);
                 const _integrants: IIntegrant[] = [];
                 // Validar que tenga admins
+
+                // HAY  QUE VALIDAR ESTE METODO, NO SE GENERARON NINGUN admins
                 if (groupData.admins > 0) {
                     for (const admin of groupData.admins) {
                         const contact: Contact = await this.contactService.findOne(admin);
@@ -201,7 +203,6 @@ export class WhatsappService {
                             if (await this.validateMessageType(message)) { continue; }
 
                             const newMessage: IMessage = await this.messageAttributes(message)
-                            console.log(newMessage)
                             _messages.push(await this.messageService.createMessage(newMessage));
                         }
                     }
@@ -211,11 +212,9 @@ export class WhatsappService {
                         messages: _messages
                     }
 
-                    console.log(Iconversation)
                     const conversation: Conversation = await this.conversationService.createConversation(Iconversation);
 
                     if (conversationData.participants.length > 0) {
-                        console.log(conversationData.participants);
                         for (const participant of conversationData.participants) {
                             const contact: Contact = await this.contactService.findOne(participant.id);
                             contact.conversations = [conversation];
