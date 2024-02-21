@@ -21,6 +21,9 @@ import { GroupController } from './group/group.controller';
 import { GroupQueries } from './group/group.queries';
 import { IntegrantQueries } from './integrant/integrant.queries';
 import { ContactController } from './contact/contact.controller';
+import { ExpressAdapter } from  '@nestjs/platform-express';
+import * as express from 'express';
+import * as cors from 'cors';
 
 @Module({
   imports: [
