@@ -16,7 +16,11 @@ export class ContactService {
     ) { }
 
     async findAll(): Promise<Contact[]> {
-        return await this.contactRepository.find();
+        try {
+            return await this.contactRepository.find();
+        } catch(error) {
+            console.log(error);
+        }
     }
 
     async findOne(contact_id: string): Promise<Contact | undefined> {

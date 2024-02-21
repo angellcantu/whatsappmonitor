@@ -29,4 +29,7 @@ export class Group {
 
     @Column({ nullable: true })
     id_integrant: number
+
+    @Column({ nullable: true })
+    id_municipio: number;
 }
