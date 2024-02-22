@@ -18,13 +18,13 @@ export class WebhookController {
 
     @Get()
     async hanldeWebhook() {
+        // Validar que el telefono sea unico FindOrCreate
         // await this.whatsappService.loadPhoneList();
         // await this.whatsappService.loadContacts();
+        // await this.whatsappService.loadImagesInContacts();
         // await this.whatsappService.loadGroupsIntegrants();
-        await this.whatsappService.loadGroupConversations();
 
-    
-        // await this.whatsappService.loadGroupConversations();
+        await this.whatsappService.loadGroupConversations();
 
         return {  }
     }

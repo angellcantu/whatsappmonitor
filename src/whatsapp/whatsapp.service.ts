@@ -66,6 +66,8 @@ export class WhatsappService {
             if (!contactList.success || contactList.data <= 0) {
                 return;
             }
+
+            console.log(contactList)
             const _contacts: IContact[] = [];
             const contacts: any[] = contactList.data;
             const phone: Phone = await this.phoneService.findPhone(parseInt(id));
@@ -78,7 +80,6 @@ export class WhatsappService {
                     phone: phone
                 });
             }
-
             await this.contactService.createContacts(_contacts);
         }
     }
@@ -89,20 +90,25 @@ export class WhatsappService {
 
             for (const id of phoneIds) {
                 const contacts: Contact[] = await this.contactService.findAll();
-                const contact3: Contact[] = contacts.slice(0, 5);
-                for (const contact of contact3) {
-                    const contactInfo: any = await this.Apiconnection(`${id}/contact/${contact.contact_id}`);
-                    if (!contactInfo.success || !contactInfo.data) {
-                        continue;
-                    }
-                    const contactData = contactInfo.data[0];
-                    const contact_id: string = contactData.id;
-                    if (contactData.image.url === "") {
-                        continue;
-                    }
 
-                    const image: any[] = contactData.image;
-                    await this.contactService.loadImage(contact_id, image);
+                for (const contact of contacts) {
+                    try {
+                        const contactInfo: any = await this.Apiconnection(`${id}/contact/${contact.contact_id}`);
+                        if (!contactInfo.success || !contactInfo.data) {
+                            continue;
+                        }
+                        const contactData = contactInfo.data[0];
+
+                        var image: string = contactData.image.url;
+                        const contact_id: string = contactData.id;
+                        if (contactData.image.url === "") {
+                            continue;
+                        }
+                        await this.contactService.loadImage(contact_id, image);
+
+                    } catch (error) {
+                        continue;
+                    }
                 }
             }
         } catch (error) {
@@ -117,55 +123,65 @@ export class WhatsappService {
 
         for (const id of phoneIds) {
             for (const contact_id of groupIds) {
-                const groupInfo: any = await this.Apiconnection(`${id}/getGroups/${contact_id}`);
+                try {
+                    const groupInfo: any = await this.Apiconnection(`${id}/getGroups/${contact_id}`);
 
-                if (!groupInfo.success || groupInfo.data <= 0) { return; }
-                const groupData: any = groupInfo.data;
-                const _group: IGroup = {
-                    id_group: contact_id,
-                    name: groupData.name,
-                    image: groupData.image,
-                    // config: undefined  # Revisar como guardar este
-                }
-
-                if (_group.name === null || _group.name === "") { return; }
-
-                const createdGroup: Group = await this.groupService.createGroup(_group);
-                const _integrants: IIntegrant[] = [];
-                // Validar que tenga admins
-
-                // HAY  QUE VALIDAR ESTE METODO, NO SE GENERARON NINGUN admins
-                if (groupData.admins > 0) {
-                    for (const admin of groupData.admins) {
-                        const contact: Contact = await this.contactService.findOne(admin);
-                        _integrants.push({
-                            integrant_id: admin,
-                            name: contact.name,
-                            phone_number: admin.substring(0, 10),
-                            type: 'admin',
-                            groups: [createdGroup]
-                        });
+                    if (!groupInfo.success || groupInfo.data <= 0) { return; }
+                    const groupData: any = groupInfo.data;
+                    const _group: IGroup = {
+                        id_group: contact_id,
+                        name: groupData.name,
+                        image: groupData.image,
+                        // config: undefined  # Revisar como guardar este
                     }
-                }
 
-                if (groupData.participants) {
-                    // Vaidar que tenga participants
-                    for (const participants of groupData.participants) {
-                        const contact: Contact = await this.contactService.findOne(participants);
-                        _integrants.push({
-                            integrant_id: participants,
-                            name: contact.name,
-                            phone_number: participants.substring(0, 10),
-                            type: 'participant',
-                            groups: [createdGroup]
-                        })
+                    if (_group.name === null || _group.name === "") { return; }
+
+                    const createdGroup: Group = await this.groupService.createGroup(_group);
+                    const _integrants: IIntegrant[] = [];
+                    var arrayIntegrants: Integrant[] = [];
+
+                    // Validar que tenga admins
+                    // HAY  QUE VALIDAR ESTE METODO, NO SE GENERARON NINGUN admins
+                    if (groupData.admins.length > 0) {
+
+                        for (const admin of groupData.admins) {
+                            const contact: Contact = await this.contactService.findOne(admin);
+                            const integra: IIntegrant = {
+                                integrant_id: admin,
+                                name: contact.name,
+                                phone_number: admin.substring(0, 10),
+                                type: 'admin',
+                            }
+                            
+                            arrayIntegrants.push(await this.integrantService.createIntegrant(integra));
+                        }
                     }
+
+                    if (groupData.participants.length > 0) {
+                        // Vaidar que tenga participants
+                        for (const participants of groupData.participants) {
+                            const contact: Contact = await this.contactService.findOne(participants);
+                            const integra: IIntegrant = {
+                                integrant_id: participants,
+                                name: contact.name,
+                                phone_number: participants.substring(0, 10),
+                                type: 'participant',
+                            }
+
+                            arrayIntegrants.push(await this.integrantService.createIntegrant(integra));
+                        }
+                    }
+
+                    if (arrayIntegrants.length > 0) {
+                        await this.groupService.updateGroupIntegrants(createdGroup,  arrayIntegrants);
+                        // integrants = await this.integrantService.createIntegrantsLoad(_integrants);
+                    }
+                } catch (error) {
+                    console.log(error);
+                    continue;
                 }
 
-                let integrants: Integrant[];
-                if (_integrants.length > 0) {
-                    integrants = await this.integrantService.createIntegrantsLoad(_integrants);
-                }
             }
         }
     }

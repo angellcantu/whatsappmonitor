@@ -13,23 +13,14 @@
 
 DROP TABLE [ycrwrusj_botwats].[log];
 DROP TABLE [ycrwrusj_botwats].[user];
-DROP TABLE [ycrwrusj_botwats].[conversation_contacts_contact];
 DROP TABLE [ycrwrusj_botwats].[contact_conversations_conversation];
-DROP TABLE [ycrwrusj_botwats].[conversation];
-DROP TABLE [ycrwrusj_botwats].[contact];
-DROP TABLE [ycrwrusj_botwats].[integrant_groups_group];
-DROP TABLE [ycrwrusj_botwats].[participant_groups_group];
-DROP TABLE [ycrwrusj_botwats].[admin_groups_group];
-DROP TABLE [ycrwrusj_botwats].[admin];
-DROP TABLE [ycrwrusj_botwats].[participant];
-DROP TABLE [ycrwrusj_botwats].[group_integrants_integrant];
+DROP TABLE [ycrwrusj_botwats].[conversation_contact];
+DROP TABLE [ycrwrusj_botwats].[group_integrant];
 DROP TABLE [ycrwrusj_botwats].[integrant];
 DROP TABLE [ycrwrusj_botwats].[group];
+DROP TABLE [ycrwrusj_botwats].[message];
+DROP TABLE [ycrwrusj_botwats].[conversation];
+DROP TABLE [ycrwrusj_botwats].[contact];
 DROP TABLE [ycrwrusj_botwats].[phone];
-
-
-
-
-
 
 

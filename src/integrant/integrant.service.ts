@@ -31,9 +31,12 @@ export class IntegrantService {
         }
     }
 
-    async existsByPhoneNumber(phone_number: string): Promise<boolean> {
+    async existsByPhoneNumber(phone_number: string, type: string): Promise<boolean> {
         try {
-            const integrant = await this.integrantRepository.findOne({ where: { phone_number } })
+            const integrant = await this.integrantRepository.findOne({ where: { 
+                phone_number,
+                type
+            } })
             return integrant ? true : false;
         } catch (error) {
             console.log(error);
@@ -47,12 +50,12 @@ export class IntegrantService {
                 name: _integrant.name,
                 phone_number: _integrant.phone_number,
                 type: _integrant.type,
-                groups: _integrant.groups
+                // groups: _integrant.groups
             });
-            if (await this.existsByPhoneNumber(_integrant.phone_number)) {
+            if (await this.existsByPhoneNumber(_integrant.phone_number, _integrant.type)) {
                 return await this.integrantRepository.findOne(
                     {
-                        where: { id_integrant: _integrant.integrant_id }
+                        where: { id_integrant: _integrant.integrant_id, type: _integrant.type }
                     }
                 )
             }

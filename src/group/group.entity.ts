@@ -28,8 +28,5 @@ export class Group {
     integrants: Integrant[]
 
     @Column({ nullable: true })
-    id_integrant: number
-
-    @Column({ nullable: true })
     id_municipio: number;
 }

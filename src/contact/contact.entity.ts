@@ -15,7 +15,7 @@ export class Contact {
     name: string;
 
     @Column({ type: 'nvarchar', length: 'max', nullable: true })
-    image: Record<string, any>;
+    image: string;
 
     @Column({ type: 'varchar', name: 'type' })
     type: string;

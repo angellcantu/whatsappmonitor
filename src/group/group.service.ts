@@ -7,6 +7,9 @@ import { IntegrantService } from "src/integrant/integrant.service";
 import { GroupQueries } from "./group.queries";
 import { Message } from "src/message/message.entity";
 import { MessageService } from "src/message/message.service";
+import { IIntegrant } from "src/integrant/IIntegrant.interface";
+import { Integrant } from "src/integrant/integrant.entity";
+import { group } from "console";
 
 @Injectable()
 export class GroupService {
@@ -14,7 +17,7 @@ export class GroupService {
         @InjectRepository(Group)
         private groupRepository: Repository<Group>,
         private readonly integrantService: IntegrantService,
-        private readonly messageService: MessageService        
+        private readonly messageService: MessageService
     ) { }
 
     async findAllGroups(): Promise<Group[] | undefined> {
@@ -41,7 +44,7 @@ export class GroupService {
             const messages: Message[] = await this.messageService.getMessageByGroup(id_group);
 
             return messages;
-        } catch(error){
+        } catch (error) {
             console.log(error);
         }
     }
@@ -121,6 +124,24 @@ export class GroupService {
             return group ? true : false;
         } catch (error) {
             console.log("no existe el integrante")
+        }
+    }
+
+    async updateGroupIntegrants(_group: Group, integrants: Integrant[]): Promise<void> {
+        try {
+            const group = await this.groupRepository.findOne(
+                { where: { id: _group.id }, relations: ['integrants'] }
+            );
+
+            if (!group) {
+                console.log("Grupo no existe")
+            }
+
+            group.integrants = integrants;
+            await this.groupRepository.save(group);
+
+        } catch (error) {
+            console.log(error)
         }
     }
 }

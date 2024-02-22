@@ -14,7 +14,7 @@ export class Integrant {
   @Column({ nullable: true })
   name: string;
 
-  @Column({ nullable: false, unique: true })
+  @Column({ nullable: false })
   phone_number: string
 
   @ManyToMany(() => Group, group => group.integrants, { nullable: true })
