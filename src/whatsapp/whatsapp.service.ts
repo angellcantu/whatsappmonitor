@@ -214,6 +214,7 @@ export class WhatsappService {
 
                     const conversationData: any = conversationInfo.data;
                     const _messages: Message[] = [];
+                    console.log(conversationData.messages);
                     if (conversationData.messages.length > 0) {
                         for (const message of conversationData.messages) {
                             if (await this.validateMessageType(message)) { continue; }

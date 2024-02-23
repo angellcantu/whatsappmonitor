@@ -29,7 +29,7 @@ export class Message {
     subtype: string;
     @Column({nullable: true})
     participant: string;
-    @Column({nullable: true})
+    @Column({nullable: true, unique: true})
     _serialized: string;
 
     // @Column({ type: 'timestamp', default: () => 'GETDATE()' })
