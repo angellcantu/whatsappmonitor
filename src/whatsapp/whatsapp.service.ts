@@ -409,8 +409,8 @@ export class WhatsappService {
 
     private async Apiconnection(endpoint: string): Promise<any> {
         const instance_url = "https://api.maytapi.com/api";
-        const product_id = "fb28146b-94d3-4f7c-a991-e43392da62de";
-        const api_token = "e938de62-dcc8-4beb-8916-32de34374f65";
+        const product_id = "c5ae19f1-658c-4f5c-a2a2-1e2c27defe9e";
+        const api_token = "5ec7e121-9ecf-4170-a7b3-08337bb9c2e7";
         
         try {
             const url = `${instance_url}/${product_id}/`
