@@ -256,13 +256,12 @@ export class WhatsappService {
         const contact: Contact = await this.contactService.findOne(newConversation);
 
         if (contact && contact.type === "group") {
-            
+            console.log("El grupo ya existe");
         } else {
             try {
                 // SI NO HAY CONTACTO SE CREA UNO NUEVO
                 const res: any = await this.Apiconnection(`${response?.phone_id}/contact/${newConversation}`);
-                const resInfo: any = res?.data;
-
+                const resInfo: any = res?.data[0];
 
                 const newContact: IContact = {
                     contact_id: resInfo?.id,
@@ -270,6 +269,7 @@ export class WhatsappService {
                     type: 'group',
                     phone: phone
                 }
+
                 await this.contactService.createContact(newContact);
 
                 // CREAR EL GRUPO
@@ -318,7 +318,6 @@ export class WhatsappService {
 
                 if (arrayIntegrants.length > 0) {
                     await this.groupService.updateGroupIntegrants(createdGroup, arrayIntegrants);
-                    // integrants = await this.integrantService.createIntegrantsLoad(_integrants);
                 }
                 // AQUI TERMINA LA CREACION DE UN GRUPO
 
