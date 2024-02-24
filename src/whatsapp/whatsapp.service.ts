@@ -407,14 +407,18 @@ export class WhatsappService {
     }
 
     private async Apiconnection(endpoint: string): Promise<any> {
+        const instance_url = "https://api.maytapi.com/api";
+        const product_id = "fb28146b-94d3-4f7c-a991-e43392da62de";
+        const api_token = "e938de62-dcc8-4beb-8916-32de34374f65";
+        
         try {
-            const url = `${process.env.INSTANCE_URL}/${process.env.PRODUCT_ID}/`
+            const url = `${instance_url}/${product_id}/`
             console.log(`${url}${endpoint}`);
             const response = await rp(`${url}${endpoint}`, {
                 method: 'get',
                 json: true,
                 headers: {
-                    'x-maytapi-key': process.env.API_TOKEN
+                    'x-maytapi-key': api_token
                 }
             });
             if (response.length < 1) {
