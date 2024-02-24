@@ -10,19 +10,20 @@ export class WebhookController {
     ) { }
 
     @Post()
-    posthanldeWebhook(@Body() payload: any) {
+    async posthanldeWebhook(@Body() payload: any) {
         console.log('Payload recibido: ', payload)
         // AQUI VAMOS A RECIBIR TODAS LAS PETICIONES DEL WEBHOOK
+        await this.whatsappService.webhookValidation(payload);
         return { message: 'Se recibio el webhook' }
     }
 
     @Get()
     async hanldeWebhook() {
         // Validar que el telefono sea unico FindOrCreate
-        // await this.whatsappService.loadPhoneList();
-        // await this.whatsappService.loadContacts();
-        // await this.whatsappService.loadImagesInContacts();
-        // await this.whatsappService.loadGroupsIntegrants();
+        await this.whatsappService.loadPhoneList();
+        await this.whatsappService.loadContacts();
+        await this.whatsappService.loadImagesInContacts();
+        await this.whatsappService.loadGroupsIntegrants();
 
         await this.whatsappService.loadGroupConversations();
 

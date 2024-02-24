@@ -55,6 +55,16 @@ export class ContactService {
         }
     }
 
+    async existsContact(contact_id: string): Promise<boolean>{
+        try {
+            const contact = await this.contactRepository.findOne({ where: { contact_id: contact_id } });
+            console.log(contact)
+            return contact ? true : false;
+        } catch (error) {
+            console.log("no existe el contacto")
+        }
+    }
+
     async createContacts(_contacts: IContact[]): Promise<void> {
         try {
             for (const contact of _contacts) {

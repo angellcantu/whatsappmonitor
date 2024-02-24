@@ -153,7 +153,7 @@ export class WhatsappService {
                                 phone_number: admin.substring(0, 10),
                                 type: 'admin',
                             }
-                            
+
                             arrayIntegrants.push(await this.integrantService.createIntegrant(integra));
                         }
                     }
@@ -174,7 +174,7 @@ export class WhatsappService {
                     }
 
                     if (arrayIntegrants.length > 0) {
-                        await this.groupService.updateGroupIntegrants(createdGroup,  arrayIntegrants);
+                        await this.groupService.updateGroupIntegrants(createdGroup, arrayIntegrants);
                         // integrants = await this.integrantService.createIntegrantsLoad(_integrants);
                     }
                 } catch (error) {
@@ -245,12 +245,146 @@ export class WhatsappService {
         }
     }
 
+    async webhookValidation(response: any) {
+        const phone: Phone = await this.phoneService.findPhone(parseInt(response?.phone_id));
+
+        var newConversation: string = response?.conversation;
+        const conversation_name: string = response?.conversation_name;
+        const type: string = response?.type;
+
+        //  PRIMERO SE VALIDA QUE EXISTA EL GRUPO O EL CHAT
+        const contact: Contact = await this.contactService.findOne(newConversation);
+
+        if (contact && contact.type === "group") {
+            
+        } else {
+            try {
+                // SI NO HAY CONTACTO SE CREA UNO NUEVO
+                const res: any = await this.Apiconnection(`${response?.phone_id}/contact/${newConversation}`);
+                const resInfo: any = res?.data;
+
+
+                const newContact: IContact = {
+                    contact_id: resInfo?.id,
+                    name: resInfo?.name,
+                    type: 'group',
+                    phone: phone
+                }
+                await this.contactService.createContact(newContact);
+
+                // CREAR EL GRUPO
+                const groupRes: any = await this.Apiconnection(`${response?.phone_id}/getGroups/${newConversation}`);
+                const resGroupInfo: any = groupRes?.data;
+
+                const newGroup: IGroup = {
+                    id_group: resInfo?.id,
+                    name: resInfo?.name,
+                    image: resInfo?.image?.url
+                }
+
+                const createdGroup: Group = await this.groupService.createGroup(newGroup);
+
+                var arrayIntegrants: Integrant[] = [];
+
+                if (resGroupInfo.admins.length > 0) {
+
+                    for (const admin of resGroupInfo.admins) {
+                        const contact: Contact = await this.contactService.findOne(admin);
+                        const integra: IIntegrant = {
+                            integrant_id: admin,
+                            name: contact.name,
+                            phone_number: admin.substring(0, 10),
+                            type: 'admin',
+                        }
+
+                        arrayIntegrants.push(await this.integrantService.createIntegrant(integra));
+                    }
+                }
+
+                if (resGroupInfo.participants.length > 0) {
+
+                    for (const participant of resGroupInfo.admins) {
+                        const contact: Contact = await this.contactService.findOne(participant);
+                        const integra: IIntegrant = {
+                            integrant_id: participant,
+                            name: contact.name,
+                            phone_number: participant.substring(0, 10),
+                            type: 'participant',
+                        }
+
+                        arrayIntegrants.push(await this.integrantService.createIntegrant(integra));
+                    }
+                }
+
+                if (arrayIntegrants.length > 0) {
+                    await this.groupService.updateGroupIntegrants(createdGroup, arrayIntegrants);
+                    // integrants = await this.integrantService.createIntegrantsLoad(_integrants);
+                }
+                // AQUI TERMINA LA CREACION DE UN GRUPO
+
+                // OBTENER LA CONVERSACION
+                const conversationInfo = await this.Apiconnection(`${response?.phone_id}/getConversations/${newConversation}`);
+                const conversationData = conversationInfo?.data;
+
+                const _messages: Message[] = [];
+                if (conversationData.messages.length > 0) {
+                    for (const message of conversationData.messages) {
+                        if (await this.validateMessageType(message)) { continue; }
+
+                        const newMessage: IMessage = await this.messageAttributes(message)
+                        _messages.push(await this.messageService.createMessage(newMessage));
+                    }
+                }
+
+
+                const Iconversation: IConversation = {
+                    id_conversation: newConversation,
+                    messages: _messages
+                }
+
+                const conversation: Conversation = await this.conversationService.createConversation(Iconversation);
+
+                if (conversationData.participants.length > 0) {
+                    for (const participant of conversationData.participants) {
+                        const contact: Contact = await this.contactService.findOne(participant.id);
+                        contact.conversations = [conversation];
+                        await this.contactService.saveConversationInContact(contact);
+                    }
+                }
+
+
+                console.log("SE CREO CORRECTAMENTE UN NUEVO GRUPO");
+            } catch (error) {
+                console.log(error);
+            }
+        }
+    }
+
     // Private methods
     private async validateMessageType(message: any): Promise<boolean> {
         const type: string = message?.message?.type;
         if (type === "info") { return true; }
 
         return false;
+    }
+
+    // HAY QUE REFACTORIZAR ESTE CODIGO CON EL DE ABAJO, SE HACE SOLO PARA PRUEBAS
+    private async assignAttributesInMessages(message: any): Promise<IMessage> {
+        const interfaceMessage: IMessage = {
+            contact: await this.contactService.findOne(message?.user?.id),
+            uuid: message?.user?.id,
+            type: message?.message?.type,
+            text: message?.message?.text ?? null,
+            url: message?.message?.url ?? null,
+            mime: message?.message?.mime ?? null,
+            filename: message?.message?.filename ?? null,
+            caption: message?.message?.caption ?? null,
+            payload: message?.message?.payload ?? null,
+            subtype: message?.mesage?.subtype ?? null,
+            participant: message?.message?.participant?._serialized ?? null,
+            _serialized: message?.message?._serialized ?? null
+        }
+        return interfaceMessage;
     }
 
     private async messageAttributes(messageInfo: any): Promise<IMessage> {
