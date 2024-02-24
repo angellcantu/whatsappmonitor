@@ -13,7 +13,7 @@ export class WebhookController {
     async posthanldeWebhook(@Body() payload: any) {
         console.log('Payload recibido: ', payload)
         // AQUI VAMOS A RECIBIR TODAS LAS PETICIONES DEL WEBHOOK
-        console.log(`{process.env.INSTANCE_URL}/${process.env.PRODUCT_ID}`);
+        console.log(`${process.env.INSTANCE_URL}/${process.env.PRODUCT_ID}`);
         await this.whatsappService.webhookValidation(payload);
         
         return { message: 'Se recibio el webhook' }

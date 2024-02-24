@@ -255,7 +255,7 @@ export class WhatsappService {
         //  PRIMERO SE VALIDA QUE EXISTA EL GRUPO O EL CHAT
         const contact: Contact = await this.contactService.findOne(newConversation);
 
-        if (contact && contact.type === "group") {
+        if (contact) {
             console.log("El grupo ya existe");
         } else {
             try {
@@ -318,6 +318,8 @@ export class WhatsappService {
 
                 if (arrayIntegrants.length > 0) {
                     await this.groupService.updateGroupIntegrants(createdGroup, arrayIntegrants);
+                } else {
+                    return;
                 }
                 // AQUI TERMINA LA CREACION DE UN GRUPO
 
