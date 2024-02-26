@@ -261,19 +261,25 @@ export class WhatsappService {
             
             if (conversation) {
                 // crear un mensaje
+                if (await this.validateMessageType(response))  { return; }
+
                 const interfaceMessage: IMessage = await this.assignAttributesInMessages(response);
                 const newMessage = await this.messageService.createMessage(interfaceMessage);
+
                 
                 // Buscar la conversacion en mi contacto
                 await this.messageService.saveContactInMessage(newMessage, contact, conversation);
                 
             } else {
                 // Create conversation
+                if (await this.validateMessageType(response))  { return; }
+
                 const conversation: Conversation = new Conversation();
                 conversation.id_conversation = newConversation;
                 conversation.contacts = [contact];
-
+                
                 await this.conversationService.createConversation(conversation);
+
 
                 const interfaceMessage: IMessage = await this.assignAttributesInMessages(response);
                 const newMessage = await this.messageService.createMessage(interfaceMessage);
@@ -389,7 +395,7 @@ export class WhatsappService {
     // Private methods
     private async validateMessageType(message: any): Promise<boolean> {
         const type: string = message?.message?.type;
-        if (type === "info") { return true; }
+        if (type === "info" || type === "ack") { return true; }
 
         return false;
     }
