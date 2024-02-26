@@ -405,7 +405,7 @@ export class WhatsappService {
     // HAY QUE REFACTORIZAR ESTE CODIGO CON EL DE ABAJO, SE HACE SOLO PARA PRUEBAS
     private async assignAttributesInMessages(message: any): Promise<IMessage> {
         const interfaceMessage: IMessage = {
-            contact: await this.contactService.findOne(message?.conversation),
+            contact: await this.contactService.findOne(message?.user?.id),
             uuid: message?.user?.id,
             type: message?.message?.type,
             text: message?.message?.text ?? null,
