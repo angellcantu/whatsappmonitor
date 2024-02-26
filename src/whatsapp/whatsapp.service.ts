@@ -266,7 +266,7 @@ export class WhatsappService {
                 const interfaceMessage: IMessage = await this.assignAttributesInMessages(response);
                 const newMessage = await this.messageService.createMessage(interfaceMessage);
 
-                
+                console.log(newMessage);
                 // Buscar la conversacion en mi contacto
                 await this.messageService.saveContactInMessage(newMessage, contact, conversation);
                 
@@ -283,6 +283,8 @@ export class WhatsappService {
 
                 const interfaceMessage: IMessage = await this.assignAttributesInMessages(response);
                 const newMessage = await this.messageService.createMessage(interfaceMessage);
+
+                console.log(newMessage)
                 
                 await this.messageService.saveContactInMessage(newMessage, contact, conversation);
             }
