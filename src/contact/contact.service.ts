@@ -7,6 +7,7 @@ import { Group } from "src/group/group.entity";
 import { GroupService } from "src/group/group.service";
 import { Phone } from "src/phone/phone.entity";
 import { Conversation } from "src/conversation/conversation.entity";
+import { Message } from "src/message/message.entity";
 
 @Injectable()
 export class ContactService {

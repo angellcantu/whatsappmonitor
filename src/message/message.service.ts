@@ -4,6 +4,8 @@ import { Repository } from "typeorm";
 import { Message } from './message.entity'
 import { IMessage } from "./message.interface"; import { Integrant } from "src/integrant/integrant.entity";
 import { IntegrantService } from "src/integrant/integrant.service";
+import { Contact } from "src/contact/contact.entity";
+import { Conversation } from "src/conversation/conversation.entity";
 
 @Injectable()
 export class MessageService {
@@ -79,7 +81,13 @@ export class MessageService {
         // }
     }
 
-    private hasPropiety(propiety: string, message: any): Promise<string | undefined> {
-        return message.hasOwnProperty(propiety) ? message[propiety] : undefined
+    async saveContactInMessage(message: Message, contact: Contact, conversation: Conversation):Promise <Message | undefined>{
+        try {
+            
+            await this.messageRepository.update(message.id, {contact, conversation});
+            return
+        } catch (error){
+            console.log(error);
+        }
     }
 }

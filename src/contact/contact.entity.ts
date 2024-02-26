@@ -21,7 +21,7 @@ export class Contact {
     type: string;
 
     // @Column({ type: 'timestamp', default: () => 'GETDATE()' })
-    // created_at: Date;
+    // created_at: Date;c
 
     // @Column({ type: 'timestamp', default: () => 'GETDATE()', onUpdate: 'GETDATE()' })
     // updated_at: Date;

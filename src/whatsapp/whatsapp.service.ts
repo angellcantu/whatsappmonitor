@@ -255,7 +255,32 @@ export class WhatsappService {
         //  PRIMERO SE VALIDA QUE EXISTA EL GRUPO O EL CHAT
         const contact: Contact = await this.contactService.findOne(newConversation);
 
+        console.log(contact)
         if (contact) {
+            const conversation: Conversation = await this.conversationService.findOne(newConversation);
+            
+            if (conversation) {
+                // crear un mensaje
+                const interfaceMessage: IMessage = await this.assignAttributesInMessages(response);
+                const newMessage = await this.messageService.createMessage(interfaceMessage);
+                
+                // Buscar la conversacion en mi contacto
+                await this.messageService.saveContactInMessage(newMessage, contact, conversation);
+                
+            } else {
+                // Create conversation
+                const conversation: Conversation = new Conversation();
+                conversation.id_conversation = newConversation;
+                conversation.contacts = [contact];
+
+                await this.conversationService.createConversation(conversation);
+
+                const interfaceMessage: IMessage = await this.assignAttributesInMessages(response);
+                const newMessage = await this.messageService.createMessage(interfaceMessage);
+                
+                await this.messageService.saveContactInMessage(newMessage, contact, conversation);
+            }
+
             console.log("El grupo ya existe");
         } else {
             try {
@@ -372,7 +397,7 @@ export class WhatsappService {
     // HAY QUE REFACTORIZAR ESTE CODIGO CON EL DE ABAJO, SE HACE SOLO PARA PRUEBAS
     private async assignAttributesInMessages(message: any): Promise<IMessage> {
         const interfaceMessage: IMessage = {
-            contact: await this.contactService.findOne(message?.user?.id),
+            contact: await this.contactService.findOne(message?.conversation),
             uuid: message?.user?.id,
             type: message?.message?.type,
             text: message?.message?.text ?? null,
