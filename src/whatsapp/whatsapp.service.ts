@@ -265,6 +265,8 @@ export class WhatsappService {
 
                 const interfaceMessage: IMessage = await this.assignAttributesInMessages(response);
                 console.log(interfaceMessage);
+                
+                if (interfaceMessage.uuid == null || interfaceMessage.uuid === "") { return; }
                 const newMessage = await this.messageService.createMessage(interfaceMessage);
 
                 
@@ -281,9 +283,10 @@ export class WhatsappService {
                 
                 await this.conversationService.createConversation(conversation);
 
-
                 const interfaceMessage: IMessage = await this.assignAttributesInMessages(response);
                 console.log(interfaceMessage)
+
+                if (interfaceMessage.uuid == null || interfaceMessage.uuid === "") { return; }
 
                 const newMessage = await this.messageService.createMessage(interfaceMessage);
 
