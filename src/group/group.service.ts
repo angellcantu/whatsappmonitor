@@ -144,4 +144,17 @@ export class GroupService {
             console.log(error)
         }
     }
+
+    async findOrCreate(group: IGroup): Promise<Group | undefined> {
+        try {
+            if (await this.existsGroup(group.name)) {
+                return await this.groupRepository.findOne({ where: { name: group.name } });
+            } else {
+                const newGroup: Group = await this.createGroup(group);
+                return newGroup;
+            }
+        } catch (error) {
+
+        }
+    }
 }

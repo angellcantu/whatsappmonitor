@@ -6,7 +6,7 @@ import { WhatsappService } from "src/whatsapp/whatsapp.service";
 export class WebhookController {
     constructor(
         private readonly webhookService: WebhookService,
-        private readonly whatsappService: WhatsappService
+        private readonly whatsappService: WhatsappService,
     ) { }
 
     @Post()
@@ -21,14 +21,12 @@ export class WebhookController {
 
     @Get()
     async hanldeWebhook() {
-        // Validar que el telefono sea unico FindOrCreate
-        await this.whatsappService.loadPhoneList();
-        await this.whatsappService.loadContacts();
-        await this.whatsappService.loadImagesInContacts();
+        // await this.whatsappService.loadPhoneList();
+        // await this.whatsappService.loadContacts();
+        // await this.whatsappService.loadImagesInContacts();
         await this.whatsappService.loadGroupsIntegrants();
+        // await this.whatsappService.loadGroupConversations();
 
-        await this.whatsappService.loadGroupConversations();
-
-        return {  }
+        return { status: 'Cargando datos en segundo plano' };
     }
 }

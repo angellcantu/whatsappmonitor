@@ -21,9 +21,8 @@ import { GroupController } from './group/group.controller';
 import { GroupQueries } from './group/group.queries';
 import { IntegrantQueries } from './integrant/integrant.queries';
 import { ContactController } from './contact/contact.controller';
-import { ExpressAdapter } from  '@nestjs/platform-express';
-import * as express from 'express';
-import * as cors from 'cors';
+import { UpdateGroupInfoService } from './task/task.service';
+import { BullModule } from '@nestjs/bull';
 
 @Module({
   imports: [
@@ -34,7 +33,7 @@ import * as cors from 'cors';
       [Contact, Group, Integrant, Message, Conversation]
     )
   ],
-  controllers: [AppController, WebhookController,  GroupController, ContactController],
+  controllers: [AppController, WebhookController, GroupController, ContactController],
   providers: [
     AppService,
     WebhookService,
@@ -44,7 +43,8 @@ import * as cors from 'cors';
     MessageService,
     ConversationService,
     IntegrantQueries,
-    GroupQueries
+    GroupQueries,
+    UpdateGroupInfoService
   ],
 })
 export class AppModule { }

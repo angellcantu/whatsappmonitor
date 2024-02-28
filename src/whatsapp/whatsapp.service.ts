@@ -67,7 +67,6 @@ export class WhatsappService {
                 return;
             }
 
-            console.log(contactList)
             const _contacts: IContact[] = [];
             const contacts: any[] = contactList.data;
             const phone: Phone = await this.phoneService.findPhone(parseInt(id));
@@ -114,7 +113,6 @@ export class WhatsappService {
         } catch (error) {
             console.log(error)
         }
-
     }
 
     async loadGroupsIntegrants(): Promise<void> {
@@ -137,8 +135,9 @@ export class WhatsappService {
 
                     if (_group.name === null || _group.name === "") { return; }
 
-                    const createdGroup: Group = await this.groupService.createGroup(_group);
-                    const _integrants: IIntegrant[] = [];
+                    // const createdGroup: Group = await this.groupService.createGroup(_group);
+                    const createdGroup: Group = await this.groupService.findOrCreate(_group);
+
                     var arrayIntegrants: Integrant[] = [];
 
                     // Validar que tenga admins
@@ -175,7 +174,6 @@ export class WhatsappService {
 
                     if (arrayIntegrants.length > 0) {
                         await this.groupService.updateGroupIntegrants(createdGroup, arrayIntegrants);
-                        // integrants = await this.integrantService.createIntegrantsLoad(_integrants);
                     }
                 } catch (error) {
                     console.log(error);
@@ -252,35 +250,33 @@ export class WhatsappService {
         const conversation_name: string = response?.conversation_name;
         const type: string = response?.type;
 
-        //  PRIMERO SE VALIDA QUE EXISTA EL GRUPO O EL CHAT
         const contact: Contact = await this.contactService.findOne(newConversation);
 
         console.log(contact)
         if (contact) {
             const conversation: Conversation = await this.conversationService.findOne(newConversation);
-            
+
             if (conversation) {
                 // crear un mensaje
-                if (await this.validateMessageType(response))  { return; }
+                if (await this.validateMessageType(response)) { return; }
 
                 const interfaceMessage: IMessage = await this.assignAttributesInMessages(response);
                 console.log(interfaceMessage);
-                
+
                 if (interfaceMessage.uuid == null || interfaceMessage.uuid === "") { return; }
                 const newMessage = await this.messageService.createMessage(interfaceMessage);
 
-                
                 // Buscar la conversacion en mi contacto
                 await this.messageService.saveContactInMessage(newMessage, contact, conversation);
-                
+
             } else {
                 // Create conversation
-                if (await this.validateMessageType(response))  { return; }
+                if (await this.validateMessageType(response)) { return; }
 
                 const conversation: Conversation = new Conversation();
                 conversation.id_conversation = newConversation;
                 conversation.contacts = [contact];
-                
+
                 await this.conversationService.createConversation(conversation);
 
                 const interfaceMessage: IMessage = await this.assignAttributesInMessages(response);
@@ -290,107 +286,18 @@ export class WhatsappService {
 
                 const newMessage = await this.messageService.createMessage(interfaceMessage);
 
-                
                 await this.messageService.saveContactInMessage(newMessage, contact, conversation);
             }
 
-            console.log("El grupo ya existe");
+            console.log("SE A INSERTADO UN MENSAJE NUEVO AL GRUPO");
         } else {
             try {
-                // SI NO HAY CONTACTO SE CREA UNO NUEVO
-                const res: any = await this.Apiconnection(`${response?.phone_id}/contact/${newConversation}`);
-                const resInfo: any = res?.data[0];
-
-                const newContact: IContact = {
-                    contact_id: resInfo?.id,
-                    name: resInfo?.name,
-                    type: 'group',
-                    phone: phone
-                }
-
-                await this.contactService.createContact(newContact);
-
-                // CREAR EL GRUPO
-                const groupRes: any = await this.Apiconnection(`${response?.phone_id}/getGroups/${newConversation}`);
-                const resGroupInfo: any = groupRes?.data;
-
-                const newGroup: IGroup = {
-                    id_group: resInfo?.id,
-                    name: resInfo?.name,
-                    image: resInfo?.image?.url
-                }
-
-                const createdGroup: Group = await this.groupService.createGroup(newGroup);
-
-                var arrayIntegrants: Integrant[] = [];
-
-                if (resGroupInfo.admins.length > 0) {
-
-                    for (const admin of resGroupInfo.admins) {
-                        const contact: Contact = await this.contactService.findOne(admin);
-                        const integra: IIntegrant = {
-                            integrant_id: admin,
-                            name: contact.name,
-                            phone_number: admin.substring(0, 10),
-                            type: 'admin',
-                        }
-
-                        arrayIntegrants.push(await this.integrantService.createIntegrant(integra));
-                    }
-                }
-
-                if (resGroupInfo.participants.length > 0) {
-
-                    for (const participant of resGroupInfo.admins) {
-                        const contact: Contact = await this.contactService.findOne(participant);
-                        const integra: IIntegrant = {
-                            integrant_id: participant,
-                            name: contact.name,
-                            phone_number: participant.substring(0, 10),
-                            type: 'participant',
-                        }
-
-                        arrayIntegrants.push(await this.integrantService.createIntegrant(integra));
-                    }
-                }
-
-                if (arrayIntegrants.length > 0) {
-                    await this.groupService.updateGroupIntegrants(createdGroup, arrayIntegrants);
-                } else {
-                    return;
-                }
-                // AQUI TERMINA LA CREACION DE UN GRUPO
-
-                // OBTENER LA CONVERSACION
-                const conversationInfo = await this.Apiconnection(`${response?.phone_id}/getConversations/${newConversation}`);
-                const conversationData = conversationInfo?.data;
-
-                const _messages: Message[] = [];
-                if (conversationData.messages.length > 0) {
-                    for (const message of conversationData.messages) {
-                        if (await this.validateMessageType(message)) { continue; }
-
-                        const newMessage: IMessage = await this.messageAttributes(message)
-                        _messages.push(await this.messageService.createMessage(newMessage));
-                    }
-                }
-
-
-                const Iconversation: IConversation = {
-                    id_conversation: newConversation,
-                    messages: _messages
-                }
-
-                const conversation: Conversation = await this.conversationService.createConversation(Iconversation);
-
-                if (conversationData.participants.length > 0) {
-                    for (const participant of conversationData.participants) {
-                        const contact: Contact = await this.contactService.findOne(participant.id);
-                        contact.conversations = [conversation];
-                        await this.contactService.saveConversationInContact(contact);
-                    }
-                }
-
+                const newContact: Contact = await this.createContactFromAPI(response?.phone_id, newConversation);
+                console.log(newContact);
+                const group: Group = await this.createGroupFromAPI(response?.phone_id, newConversation, contact);
+                console.log(group);
+                const createdConversation: Conversation = await this.createConversationFromAPI(response?.phone_id, newConversation);
+                console.log(createdConversation);
 
                 console.log("SE CREO CORRECTAMENTE UN NUEVO GRUPO");
             } catch (error) {
@@ -400,6 +307,145 @@ export class WhatsappService {
     }
 
     // Private methods
+    private async createGroupFromAPI(phone_id: string, group_id: string, contact: Contact): Promise<Group | undefined> {
+        try {
+            const groupRes: any = await this.Apiconnection(`${phone_id}/getGroups/${group_id}`);
+            const resGroupInfo: any = groupRes?.data;
+
+            const newGroup: IGroup = {
+                id_group: contact.contact_id,
+                name: contact.name,
+                image: contact.image
+            }
+
+            const createdGroup: Group = await this.groupService.findOrCreate(newGroup);
+            const integrants: Integrant[] = await this.createIntegrantsInGroupFromAPI(createdGroup, resGroupInfo);
+
+            return createdGroup;
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    private async createIntegrantsInGroupFromAPI(group: Group, resGroupInfo: any): Promise<Integrant[] | undefined> {
+        try {
+            var arrayIntegrants: Integrant[] = [];
+
+            if (resGroupInfo.admins.length > 0) {
+                for (const admin of resGroupInfo.admins) {
+                    const contact: Contact = await this.contactService.findOne(admin);
+                    const integra: IIntegrant = {
+                        integrant_id: admin,
+                        name: contact.name,
+                        phone_number: admin.substring(0, 10),
+                        type: 'admin',
+                    }
+
+                    arrayIntegrants.push(await this.integrantService.createIntegrant(integra));
+                }
+            }
+
+            if (resGroupInfo.participants.length > 0) {
+                for (const participant of resGroupInfo.admins) {
+                    const contact: Contact = await this.contactService.findOne(participant);
+                    const integra: IIntegrant = {
+                        integrant_id: participant,
+                        name: contact.name,
+                        phone_number: participant.substring(0, 10),
+                        type: 'participant',
+                    }
+
+                    arrayIntegrants.push(await this.integrantService.createIntegrant(integra));
+                }
+            }
+
+            if (arrayIntegrants.length > 0) {
+                await this.groupService.updateGroupIntegrants(group, arrayIntegrants);
+            } else {
+                return;
+            }
+            return arrayIntegrants;
+        } catch (error) {
+
+        }
+    }
+
+    private async createContactFromAPI(phone_id: string, contact_id: string): Promise<Contact | undefined> {
+        try {
+            const phone: Phone = await this.phoneService.findPhone(parseInt(phone_id));
+            const res: any = await this.Apiconnection(`${phone_id}/contact/${contact_id}`);
+            const resInfo: any = res?.data[0];
+
+            const newContact: IContact = {
+                contact_id: resInfo?.id,
+                name: resInfo?.name,
+                type: 'group',
+                phone: phone
+            }
+
+            const contact: Contact = await this.contactService.createContact(newContact);
+            return contact;
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    private async createConversationFromAPI(phone_id: string, conversation_id: string): Promise<Conversation | undefined> {
+        try {
+            const conversationInfo = await this.Apiconnection(`${phone_id}/getConversations/${conversation_id}`);
+            const conversationData = conversationInfo?.data;
+
+            const _messages: Message[] = [];
+            if (conversationData.messages.length > 0) {
+                for (const message of conversationData.messages) {
+                    if (await this.validateMessageType(message)) { continue; }
+
+                    const newMessage: IMessage = await this.messageAttributes(message)
+                    _messages.push(await this.messageService.createMessage(newMessage));
+                }
+            }
+            const conversation: Conversation = await this.createConversation(
+                conversation_id,
+                _messages
+            );
+
+            if (conversationData.participants.length > 0) {
+                for (const participant of conversationData.participants) {
+                    const contact: Contact = await this.contactService.findOne(participant.id);
+                    contact.conversations = [conversation];
+                    await this.contactService.saveConversationInContact(contact);
+                }
+            }
+            return conversation;
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    private async createConversation(conversation_name: string, messages: Message[]): Promise<Conversation | undefined> {
+        try {
+            const Iconversation: IConversation = {
+                id_conversation: conversation_name,
+                messages: messages
+            }
+
+            const conversation: Conversation = await this.conversationService.createConversation(Iconversation);
+
+            return conversation;
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    private async createMessage(response: any): Promise<Message | undefined> {
+        try {
+            const interfaceMessage: IMessage = await this.assignAttributesInMessages(response);
+            return;
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
     private async validateMessageType(message: any): Promise<boolean> {
         const type: string = message?.message?.type;
         if (type === "info" || type === "ack") { return true; }
@@ -426,6 +472,29 @@ export class WhatsappService {
         return interfaceMessage;
     }
 
+    private async assignMessageAttributes(contact_id: string, uuid: string, messageInfo: any): Promise<IMessage> {
+        try {
+            const message: IMessage = {
+                contact: await this.contactService.findOne(contact_id),
+                uuid: uuid,
+                type: messageInfo?.message?.type,
+                text: messageInfo?.message?.text ?? null,
+                url: messageInfo?.message?.url ?? null,
+                mime: messageInfo?.message?.mime ?? null,
+                filename: messageInfo?.message?.filename ?? null,
+                caption: messageInfo?.message?.caption ?? null,
+                payload: messageInfo?.message?.payload ?? null,
+                subtype: messageInfo?.mesage?.subtype ?? null,
+                participant: messageInfo?.message?.participant?._serialized ?? null,
+                _serialized: messageInfo?.message?._serialized ?? null
+            }
+
+            return message;
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
     private async messageAttributes(messageInfo: any): Promise<IMessage> {
         const message: IMessage = {
             contact: await this.contactService.findOne(messageInfo.uid),
@@ -449,7 +518,7 @@ export class WhatsappService {
         const instance_url = "https://api.maytapi.com/api";
         const product_id = "c5ae19f1-658c-4f5c-a2a2-1e2c27defe9e";
         const api_token = "5ec7e121-9ecf-4170-a7b3-08337bb9c2e7";
-        
+
         try {
             const url = `${instance_url}/${product_id}/`
             console.log(`${url}${endpoint}`);

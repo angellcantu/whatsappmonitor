@@ -69,6 +69,7 @@ export class ContactService {
     async createContacts(_contacts: IContact[]): Promise<void> {
         try {
             for (const contact of _contacts) {
+                if (await this.findOne(contact.contact_id)) { continue; }
                 await this.createContact(contact)
             }
         } catch (error) {

@@ -29,6 +29,11 @@ export class MessageService {
 
     async createMessage(_message: IMessage | undefined) {
         try {
+            const tempMessage: Message = await this.messageRepository.findOne({ where: { _serialized: _message._serialized } });
+            if (tempMessage) {
+                return tempMessage;
+            }
+
             const message: Message = await this.messageRepository.create({
                 uuid: _message.uuid,
                 type: _message.type,
@@ -81,12 +86,12 @@ export class MessageService {
         // }
     }
 
-    async saveContactInMessage(message: Message, contact: Contact, conversation: Conversation):Promise <Message | undefined>{
+    async saveContactInMessage(message: Message, contact: Contact, conversation: Conversation): Promise<Message | undefined> {
         try {
-            
-            await this.messageRepository.update(message.id, {contact, conversation});
+
+            await this.messageRepository.update(message.id, { contact, conversation });
             return
-        } catch (error){
+        } catch (error) {
             console.log(error);
         }
     }
