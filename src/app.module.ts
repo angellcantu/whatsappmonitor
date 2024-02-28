@@ -22,7 +22,10 @@ import { GroupQueries } from './group/group.queries';
 import { IntegrantQueries } from './integrant/integrant.queries';
 import { ContactController } from './contact/contact.controller';
 import { UpdateGroupInfoService } from './task/task.service';
-import { BullModule } from '@nestjs/bull';
+import { EventsGateway } from './events/events.gateway';
+import { DatabaseService } from './database/database.service';
+import { MessageGateway } from './message/message.gateway';
+
 
 @Module({
   imports: [
@@ -44,7 +47,7 @@ import { BullModule } from '@nestjs/bull';
     ConversationService,
     IntegrantQueries,
     GroupQueries,
-    UpdateGroupInfoService
+    MessageGateway
   ],
 })
 export class AppModule { }

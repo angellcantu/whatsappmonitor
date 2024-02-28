@@ -6,13 +6,15 @@ import { IMessage } from "./message.interface"; import { Integrant } from "src/i
 import { IntegrantService } from "src/integrant/integrant.service";
 import { Contact } from "src/contact/contact.entity";
 import { Conversation } from "src/conversation/conversation.entity";
+import { MessageGateway } from "./message.gateway";
 
 @Injectable()
 export class MessageService {
     constructor(
         @InjectRepository(Message)
         private messageRepository: Repository<Message>,
-        private readonly integrantService: IntegrantService
+        private readonly integrantService: IntegrantService,
+        private readonly messageGateway: MessageGateway
     ) { }
 
     async findAll(): Promise<Message[]> {
@@ -49,7 +51,9 @@ export class MessageService {
                 contact: _message.contact
             });
 
-            return await this.messageRepository.save(message);
+            const savedMessage =  await this.messageRepository.save(message);
+            // this.messageGateway.emitNewMessageEvent(savedMessage);
+            return savedMessage;
         } catch (error) {
             console.log(error);
         }

@@ -24,7 +24,9 @@
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/platform-socket.io": "^10.3.3",
     "@nestjs/typeorm": "^10.0.1",
+    "@nestjs/websockets": "^10.3.3",
     "@types/request-promise-native": "^1.0.21",
     "bull": "^4.12.2",
     "mssql": "^10.0.2",
@@ -35,6 +37,7 @@
     "request-promise": "^4.2.6",
     "request-promise-native": "^1.0.9",
     "rxjs": "^7.8.1",
+    "socket.io": "^4.7.4",
     "typeorm": "^0.3.20"
   },
   "devDependencies": {
