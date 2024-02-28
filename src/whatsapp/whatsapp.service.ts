@@ -267,7 +267,7 @@ export class WhatsappService {
                 const newMessage = await this.messageService.createMessage(interfaceMessage);
 
                 // Buscar la conversacion en mi contacto
-                await this.messageService.saveContactInMessage(newMessage, contact, conversation);
+                await this.messageService.saveContactInMessage(newMessage, newMessage.contact, conversation);
 
             } else {
                 // Create conversation
@@ -286,7 +286,7 @@ export class WhatsappService {
 
                 const newMessage = await this.messageService.createMessage(interfaceMessage);
 
-                await this.messageService.saveContactInMessage(newMessage, contact, conversation);
+                await this.messageService.saveContactInMessage(newMessage, newMessage.contact, conversation);
             }
 
             console.log("SE A INSERTADO UN MENSAJE NUEVO AL GRUPO");
