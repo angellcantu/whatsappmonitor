@@ -122,59 +122,61 @@ export class WhatsappService {
         for (const id of phoneIds) {
             for (const contact_id of groupIds) {
                 try {
-                    const groupInfo: any = await this.Apiconnection(`${id}/getGroups/${contact_id}`);
+                    const contact: Contact = await this.contactService.findOne(contact_id)
+                    await this.createGroupFromAPI(id, contact_id, contact);
+                    // const groupInfo: any = await this.Apiconnection(`${id}/getGroups/${contact_id}`);
 
-                    if (!groupInfo.success || groupInfo.data <= 0) { return; }
-                    const groupData: any = groupInfo.data;
-                    const _group: IGroup = {
-                        id_group: contact_id,
-                        name: groupData.name,
-                        image: groupData.image,
-                        // config: undefined  # Revisar como guardar este
-                    }
+                    // if (!groupInfo.success || groupInfo.data <= 0) { return; }
+                    // const groupData: any = groupInfo.data;
+                    // const _group: IGroup = {
+                    //     id_group: contact_id,
+                    //     name: groupData.name,
+                    //     image: groupData.image,
+                    //     // config: undefined  # Revisar como guardar este
+                    // }
 
-                    if (_group.name === null || _group.name === "") { return; }
+                    // if (_group.name === null || _group.name === "") { return; }
 
                     // const createdGroup: Group = await this.groupService.createGroup(_group);
-                    const createdGroup: Group = await this.groupService.findOrCreate(_group);
+                    // const createdGroup: Group = await this.groupService.findOrCreate(_group);
 
-                    var arrayIntegrants: Integrant[] = [];
+                    // var arrayIntegrants: Integrant[] = [];
 
-                    // Validar que tenga admins
-                    // HAY  QUE VALIDAR ESTE METODO, NO SE GENERARON NINGUN admins
-                    if (groupData.admins.length > 0) {
+                    // // Validar que tenga admins
+                    // // HAY  QUE VALIDAR ESTE METODO, NO SE GENERARON NINGUN admins
+                    // if (groupData.admins.length > 0) {
 
-                        for (const admin of groupData.admins) {
-                            const contact: Contact = await this.contactService.findOne(admin);
-                            const integra: IIntegrant = {
-                                integrant_id: admin,
-                                name: contact.name,
-                                phone_number: admin.substring(0, 10),
-                                type: 'admin',
-                            }
+                    //     for (const admin of groupData.admins) {
+                    //         const contact: Contact = await this.contactService.findOne(admin);
+                    //         const integra: IIntegrant = {
+                    //             integrant_id: admin,
+                    //             name: contact.name,
+                    //             phone_number: admin.substring(0, 10),
+                    //             type: 'admin',
+                    //         }
 
-                            arrayIntegrants.push(await this.integrantService.createIntegrant(integra));
-                        }
-                    }
+                    //         arrayIntegrants.push(await this.integrantService.createIntegrant(integra));
+                    //     }
+                    // }
 
-                    if (groupData.participants.length > 0) {
-                        // Vaidar que tenga participants
-                        for (const participants of groupData.participants) {
-                            const contact: Contact = await this.contactService.findOne(participants);
-                            const integra: IIntegrant = {
-                                integrant_id: participants,
-                                name: contact.name,
-                                phone_number: participants.substring(0, 10),
-                                type: 'participant',
-                            }
+                    // if (groupData.participants.length > 0) {
+                    //     // Vaidar que tenga participants
+                    //     for (const participants of groupData.participants) {
+                    //         const contact: Contact = await this.contactService.findOne(participants);
+                    //         const integra: IIntegrant = {
+                    //             integrant_id: participants,
+                    //             name: contact.name,
+                    //             phone_number: participants.substring(0, 10),
+                    //             type: 'participant',
+                    //         }
 
-                            arrayIntegrants.push(await this.integrantService.createIntegrant(integra));
-                        }
-                    }
+                    //         arrayIntegrants.push(await this.integrantService.createIntegrant(integra));
+                    //     }
+                    // }
 
-                    if (arrayIntegrants.length > 0) {
-                        await this.groupService.updateGroupIntegrants(createdGroup, arrayIntegrants);
-                    }
+                    // if (arrayIntegrants.length > 0) {
+                    //     await this.groupService.updateGroupIntegrants(createdGroup, arrayIntegrants);
+                    // }
                 } catch (error) {
                     console.log(error);
                     continue;
@@ -312,11 +314,15 @@ export class WhatsappService {
             const groupRes: any = await this.Apiconnection(`${phone_id}/getGroups/${group_id}`);
             const resGroupInfo: any = groupRes?.data;
 
+            if (!groupRes.success || groupRes.data <= 0) { return; }
+
             const newGroup: IGroup = {
                 id_group: contact.contact_id,
                 name: contact.name,
                 image: contact.image
             }
+
+            if (newGroup.name === null || newGroup.name === "") { return; }
 
             const createdGroup: Group = await this.groupService.findOrCreate(newGroup);
             const integrants: Integrant[] = await this.createIntegrantsInGroupFromAPI(createdGroup, resGroupInfo);
@@ -346,7 +352,7 @@ export class WhatsappService {
             }
 
             if (resGroupInfo.participants.length > 0) {
-                for (const participant of resGroupInfo.admins) {
+                for (const participant of resGroupInfo.participants) {
                     const contact: Contact = await this.contactService.findOne(participant);
                     const integra: IIntegrant = {
                         integrant_id: participant,
