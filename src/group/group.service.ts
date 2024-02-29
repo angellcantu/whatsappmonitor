@@ -9,7 +9,6 @@ import { Message } from "src/message/message.entity";
 import { MessageService } from "src/message/message.service";
 import { IIntegrant } from "src/integrant/IIntegrant.interface";
 import { Integrant } from "src/integrant/integrant.entity";
-import { group } from "console";
 
 @Injectable()
 export class GroupService {
@@ -155,6 +154,16 @@ export class GroupService {
             }
         } catch (error) {
 
+        }
+    }
+
+    async loadImage(group_id: string, image: string): Promise<void> {
+        try {
+            const group: Group = await this.groupRepository.findOne({ where: { id_group: group_id } });
+            group.image = image;
+            await this.groupRepository.update(group.id, { image });
+        } catch (error) {
+            console.log(error);
         }
     }
 }

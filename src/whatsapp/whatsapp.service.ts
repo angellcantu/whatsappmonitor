@@ -115,6 +115,21 @@ export class WhatsappService {
         }
     }
 
+    async loadImagesInGroups(): Promise<void>{
+        try {
+            const phoneIds: string[] = await this.phoneService.findAllPhoneIds();
+            for (const id of phoneIds) {
+                const groups: Group[] = await this.groupService.findAllGroups();
+                for (const group of groups) {
+                    const image: string = (await this.contactService.findOne(group.id_group)).image;
+                    await this.groupService.loadImage(group.id_group, image);
+                }
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
     async loadGroupsIntegrants(): Promise<void> {
         const groupIds: string[] = (await this.contactService.getGroupsId());
         const phoneIds: string[] = await this.phoneService.findAllPhoneIds();
@@ -124,59 +139,6 @@ export class WhatsappService {
                 try {
                     const contact: Contact = await this.contactService.findOne(contact_id)
                     await this.createGroupFromAPI(id, contact_id, contact);
-                    // const groupInfo: any = await this.Apiconnection(`${id}/getGroups/${contact_id}`);
-
-                    // if (!groupInfo.success || groupInfo.data <= 0) { return; }
-                    // const groupData: any = groupInfo.data;
-                    // const _group: IGroup = {
-                    //     id_group: contact_id,
-                    //     name: groupData.name,
-                    //     image: groupData.image,
-                    //     // config: undefined  # Revisar como guardar este
-                    // }
-
-                    // if (_group.name === null || _group.name === "") { return; }
-
-                    // const createdGroup: Group = await this.groupService.createGroup(_group);
-                    // const createdGroup: Group = await this.groupService.findOrCreate(_group);
-
-                    // var arrayIntegrants: Integrant[] = [];
-
-                    // // Validar que tenga admins
-                    // // HAY  QUE VALIDAR ESTE METODO, NO SE GENERARON NINGUN admins
-                    // if (groupData.admins.length > 0) {
-
-                    //     for (const admin of groupData.admins) {
-                    //         const contact: Contact = await this.contactService.findOne(admin);
-                    //         const integra: IIntegrant = {
-                    //             integrant_id: admin,
-                    //             name: contact.name,
-                    //             phone_number: admin.substring(0, 10),
-                    //             type: 'admin',
-                    //         }
-
-                    //         arrayIntegrants.push(await this.integrantService.createIntegrant(integra));
-                    //     }
-                    // }
-
-                    // if (groupData.participants.length > 0) {
-                    //     // Vaidar que tenga participants
-                    //     for (const participants of groupData.participants) {
-                    //         const contact: Contact = await this.contactService.findOne(participants);
-                    //         const integra: IIntegrant = {
-                    //             integrant_id: participants,
-                    //             name: contact.name,
-                    //             phone_number: participants.substring(0, 10),
-                    //             type: 'participant',
-                    //         }
-
-                    //         arrayIntegrants.push(await this.integrantService.createIntegrant(integra));
-                    //     }
-                    // }
-
-                    // if (arrayIntegrants.length > 0) {
-                    //     await this.groupService.updateGroupIntegrants(createdGroup, arrayIntegrants);
-                    // }
                 } catch (error) {
                     console.log(error);
                     continue;

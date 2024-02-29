@@ -47,7 +47,8 @@ import { MessageGateway } from './message/message.gateway';
     ConversationService,
     IntegrantQueries,
     GroupQueries,
-    MessageGateway
+    MessageGateway,
+    UpdateGroupInfoService
   ],
 })
 export class AppModule { }
