@@ -20,6 +20,9 @@ export class Contact {
     @Column({ type: 'varchar', name: 'type' })
     type: string;
 
+    @Column( { default: 0 } )
+    group_number: number;
+
     // @Column({ type: 'timestamp', default: () => 'GETDATE()' })
     // created_at: Date;c
 
@@ -30,10 +33,6 @@ export class Contact {
     @ManyToOne(() => Phone, phone => phone.contacts)
     @JoinColumn()
     phone: Phone
-
-    // @ManyToMany(() => Conversation, conversation => conversation.contacts)
-    // @JoinTable()
-    // conversations: Conversation[]
 
     @ManyToMany(() => Conversation, conversation => conversation.contacts, { nullable: true })
     @JoinTable({

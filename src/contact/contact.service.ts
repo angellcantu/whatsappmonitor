@@ -3,11 +3,6 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Contact } from './contact.entity'
 import { IContact } from "./contact.interface";
-import { Group } from "src/group/group.entity";
-import { GroupService } from "src/group/group.service";
-import { Phone } from "src/phone/phone.entity";
-import { Conversation } from "src/conversation/conversation.entity";
-import { Message } from "src/message/message.entity";
 
 @Injectable()
 export class ContactService {
@@ -18,7 +13,25 @@ export class ContactService {
 
     async findAll(): Promise<Contact[]> {
         try {
-            return await this.contactRepository.find({where: {type: "chat"}});
+            const rawQuery = `
+                SELECT c.id, c.name, c.image, c.type, c.phoneId, COUNT(DISTINCT gi.group_id) AS groups
+                FROM  contact c
+                LEFT JOIN integrant i ON i.id_integrant = c.contact_id
+                LEFT JOIN group_integrant gi ON gi.integrant_id = i.id
+                WHERE c.type = 'chat'
+                GROUP BY c.id, c.name, c.image, c.type, c.phoneId
+            `;
+            const results = await this.contactRepository.query(rawQuery);
+            return results.map(result => {
+                const contact = new Contact();
+                contact.id = result.id,
+                contact.name = result.name,
+                contact.image = result.image,
+                contact.type = result.type,
+                contact.phone = result.phoneId
+                contact.group_number = result.groups
+                return contact;
+            });
         } catch(error) {
             console.log(error);
         }
