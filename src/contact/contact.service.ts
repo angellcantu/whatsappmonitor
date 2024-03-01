@@ -14,7 +14,7 @@ export class ContactService {
     async findAll(): Promise<Contact[]> {
         try {
             const rawQuery = `
-                SELECT c.id, c.name, c.image, c.type, c.phoneId, COUNT(DISTINCT gi.group_id) AS groups
+                SELECT c.id, c.contact_id, c.name, c.image, c.type, c.phoneId, COUNT(DISTINCT gi.group_id) AS groups
                 FROM  contact c
                 LEFT JOIN integrant i ON i.id_integrant = c.contact_id
                 LEFT JOIN group_integrant gi ON gi.integrant_id = i.id
@@ -25,6 +25,7 @@ export class ContactService {
             return results.map(result => {
                 const contact = new Contact();
                 contact.id = result.id,
+                contact.contact_id = result.contact_id,
                 contact.name = result.name,
                 contact.image = result.image,
                 contact.type = result.type,
