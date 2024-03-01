@@ -19,7 +19,7 @@ export class ContactService {
                 LEFT JOIN integrant i ON i.id_integrant = c.contact_id
                 LEFT JOIN group_integrant gi ON gi.integrant_id = i.id
                 WHERE c.type = 'chat'
-                GROUP BY c.id, c.name, c.image, c.type, c.phoneId
+                GROUP BY c.id, c.name, c.image, c.type, c.phoneId, c.contact_id
             `;
             const results = await this.contactRepository.query(rawQuery);
             return results.map(result => {
