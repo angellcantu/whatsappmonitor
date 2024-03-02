@@ -219,19 +219,25 @@ export class WhatsappService {
         console.log(contact)
         if (contact) {
             const conversation: Conversation = await this.conversationService.findOne(newConversation);
-
             if (conversation) {
+                const group: Group = await this.groupService.findGroup(newConversation);
+                if (group) {
+                    if (await this.validateMessageType(response)) { return; }
+
+                    const interfaceMessage: IMessage = await this.assignAttributesInMessages(response);
+                    console.log(interfaceMessage);
+    
+                    if (interfaceMessage.uuid == null || interfaceMessage.uuid === "") { return; }
+                    const newMessage = await this.messageService.createMessage(interfaceMessage);
+    
+                    // Buscar la conversacion en mi contacto
+                    await this.messageService.saveContactInMessage(newMessage, newMessage.contact, conversation);
+                } else {
+                    const createdGroup: Group = await this.createGroupFromAPI(response?.phone_id, newConversation, contact);
+                    const createdConversation: Conversation = await this.createConversationFromAPI(response?.phone_id, newConversation);
+                    console.log(createdConversation);
+                }
                 // crear un mensaje
-                if (await this.validateMessageType(response)) { return; }
-
-                const interfaceMessage: IMessage = await this.assignAttributesInMessages(response);
-                console.log(interfaceMessage);
-
-                if (interfaceMessage.uuid == null || interfaceMessage.uuid === "") { return; }
-                const newMessage = await this.messageService.createMessage(interfaceMessage);
-
-                // Buscar la conversacion en mi contacto
-                await this.messageService.saveContactInMessage(newMessage, newMessage.contact, conversation);
 
             } else {
                 // Create conversation
@@ -242,15 +248,21 @@ export class WhatsappService {
                 conversation.contacts = [contact];
 
                 await this.conversationService.createConversation(conversation);
+                const group: Group = await this.groupService.findGroup(newConversation);
+                if (group) {
+                    const interfaceMessage: IMessage = await this.assignAttributesInMessages(response);
+                    console.log(interfaceMessage)
+    
+                    if (interfaceMessage.uuid == null || interfaceMessage.uuid === "") { return; }
+    
+                    const newMessage = await this.messageService.createMessage(interfaceMessage);
+    
+                    await this.messageService.saveContactInMessage(newMessage, newMessage.contact, conversation);
+                } else {
+                    const createdGroup: Group = await this.createGroupFromAPI(response?.phone_id, newConversation, contact);
+                    const createdConversation: Conversation = await this.createConversationFromAPI(response?.phone_id, newConversation);
+                }
 
-                const interfaceMessage: IMessage = await this.assignAttributesInMessages(response);
-                console.log(interfaceMessage)
-
-                if (interfaceMessage.uuid == null || interfaceMessage.uuid === "") { return; }
-
-                const newMessage = await this.messageService.createMessage(interfaceMessage);
-
-                await this.messageService.saveContactInMessage(newMessage, newMessage.contact, conversation);
             }
 
             console.log("SE A INSERTADO UN MENSAJE NUEVO AL GRUPO");
@@ -258,7 +270,7 @@ export class WhatsappService {
             try {
                 const newContact: Contact = await this.createContactFromAPI(response?.phone_id, newConversation);
                 console.log(newContact);
-                const group: Group = await this.createGroupFromAPI(response?.phone_id, newConversation, contact);
+                const group: Group = await this.createGroupFromAPI(response?.phone_id, newConversation, newContact);
                 console.log(group);
                 const createdConversation: Conversation = await this.createConversationFromAPI(response?.phone_id, newConversation);
                 console.log(createdConversation);

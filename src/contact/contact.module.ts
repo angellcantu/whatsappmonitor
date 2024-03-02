@@ -10,4 +10,4 @@ import { Group } from 'src/group/group.entity';
     exports: [ContactService]
 })
 
-export class ContactModule { }
+export class ContactModule { }we

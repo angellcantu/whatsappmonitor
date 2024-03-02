@@ -47,6 +47,13 @@ export class GroupService {
             console.log(error);
         }
     }
+    async findGroup(group_id: string): Promise <Group | undefined> {
+        try {
+            return await this.groupRepository.findOne({where: {id_group: group_id}});
+        } catch (error) {
+            console.log(error);
+        }
+    }
 
     async createGroup(_group: IGroup): Promise<Group | undefined> {
         try {
