@@ -76,7 +76,8 @@ export class WhatsappService {
                     contact_id: contact.id,
                     name: contact.name,
                     type: contact.type,
-                    phone: phone
+                    phone: phone,
+                    image: contact?.url?.image
                 });
             }
             await this.contactService.createContacts(_contacts);
@@ -100,7 +101,7 @@ export class WhatsappService {
 
                         var image: string = contactData.image.url;
                         const contact_id: string = contactData.id;
-                        if (contactData.image.url === "") {
+                        if (image === "" || image === undefined) {
                             continue;
                         }
                         await this.contactService.loadImage(contact_id, image);
@@ -121,7 +122,13 @@ export class WhatsappService {
             for (const id of phoneIds) {
                 const groups: Group[] = await this.groupService.findAllGroups();
                 for (const group of groups) {
-                    const image: string = (await this.contactService.findOne(group.id_group)).image;
+                    const groupData: any = await this.Apiconnection(`${id}/contact/${group.id_group}`);
+                    if (!groupData.success || !groupData.data) {
+                        continue;
+                    }
+                    const groupResponse = groupData.data[0];
+
+                    const image: string = groupResponse.image;
                     await this.groupService.loadImage(group.id_group, image);
                 }
             }
@@ -360,7 +367,8 @@ export class WhatsappService {
                 contact_id: resInfo?.id,
                 name: resInfo?.name,
                 type: 'group',
-                phone: phone
+                phone: phone,
+                image: resInfo?.url?.image
             }
 
             const contact: Contact = await this.contactService.createContact(newContact);
