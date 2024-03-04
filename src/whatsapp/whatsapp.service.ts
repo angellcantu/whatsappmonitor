@@ -122,13 +122,14 @@ export class WhatsappService {
             for (const id of phoneIds) {
                 const groups: Group[] = await this.groupService.findAllGroups();
                 for (const group of groups) {
-                    const groupData: any = await this.Apiconnection(`${id}/contact/${group.id_group}`);
+                    const groupData: any = await this.Apiconnection(`${id}/getGroups/${group.id_group}`);
                     if (!groupData.success || !groupData.data) {
                         continue;
                     }
-                    const groupResponse = groupData.data[0];
+                    const groupResponse = groupData.data;
 
                     const image: string = groupResponse.image;
+                    if (image === "" || image == null) { continue; }
                     await this.groupService.loadImage(group.id_group, image);
                 }
             }
