@@ -1,7 +1,7 @@
 import { group } from 'console';
 import { Contact } from 'src/contact/contact.entity';
 import { Group } from 'src/group/group.entity';
-import { Entity, Column, PrimaryGeneratedColumn, Unique, JoinColumn, OneToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, JoinColumn, OneToMany, UpdateDateColumn } from 'typeorm';
 
 @Entity()
 export class Phone {
@@ -22,11 +22,11 @@ export class Phone {
     @Column({nullable: true})
     mult_device: boolean;
 
-    // @Column({ type: 'timestamp', default: () => 'GETDATE()' })
-    // created_at: Date;
-
-    // @Column({ type: 'timestamp', default: () => 'GETDATE()', onUpdate: 'GETDATE()' })
-    // updated_at: Date;
+    @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+    fechaCreacion: Date;
+  
+    @UpdateDateColumn({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
+    updatedAt: Date;
 
     // Relationships
     // Phone has a many Contacts
