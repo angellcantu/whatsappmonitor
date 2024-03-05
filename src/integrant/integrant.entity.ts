@@ -1,5 +1,5 @@
 // objeto-base.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, JoinTable, ManyToMany, JoinColumn, OneToMany } from 'typeorm';
+import { Entity, CreateDateColumn,  UpdateDateColumn, PrimaryGeneratedColumn, Column, JoinTable, ManyToMany, JoinColumn, OneToMany } from 'typeorm';
 import { Group } from 'src/group/group.entity';
 import { Message } from 'src/message/message.entity';
 
@@ -31,13 +31,10 @@ export class Integrant {
 
   @Column({ nullable: false })
   type: string;
-  // @Column({ type: 'timestamp', default: () => 'GETDATE()' })
-  // created_at: Date;
 
-  // @Column({ type: 'timestamp', default: () => 'GETDATE()', onUpdate: 'GETDATE()' })
-  // updated_at: Date;
-
-  // @OneToMany(() => Message, message => message.integrant, { nullable: true })
-  // @JoinColumn()
-  // messages: Message[]
+  @CreateDateColumn({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+    createdAt: Date;
+  
+  @UpdateDateColumn({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
+    updatedAt: Date;
 }

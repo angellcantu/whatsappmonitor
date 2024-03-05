@@ -1,6 +1,6 @@
 import { Contact } from 'src/contact/contact.entity';
 import { Integrant } from 'src/integrant/integrant.entity';
-import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn, JoinColumn } from 'typeorm';
+import { Column, CreateDateColumn, UpdateDateColumn, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn, JoinColumn } from 'typeorm';
 
 @Entity()
 export class Group {
@@ -29,4 +29,16 @@ export class Group {
 
     @Column({ nullable: true })
     id_municipio: number;
+
+    @CreateDateColumn({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+    createdAt: Date;
+  
+    @UpdateDateColumn({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
+    updatedAt: Date;
+
+    @Column({ default: true })
+    status: boolean;
+
+    @Column({nullable: true})
+    last_message_date: string;
 }

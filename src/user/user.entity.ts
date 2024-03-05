@@ -12,9 +12,9 @@ export class User {
     @Column({nullable: false})
     phone_number: string;
 
-    // @Column({ type: 'timestamp', default: () => 'GETDATE()' })
-    // created_at: Date;
-
-    // @Column({ type: 'timestamp', default: () => 'GETDATE()', onUpdate: 'GETDATE()' })
-    // updated_at: Date;
+    @CreateDateColumn({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+    createdAt: Date;
+  
+    @UpdateDateColumn({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
+    updatedAt: Date;
 }

@@ -22,8 +22,8 @@ export class Phone {
     @Column({nullable: true})
     mult_device: boolean;
 
-    @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
-    fechaCreacion: Date;
+    @CreateDateColumn({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+    createdAt: Date;
   
     @UpdateDateColumn({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
     updatedAt: Date;

@@ -1,7 +1,7 @@
 import { Conversation } from 'src/conversation/conversation.entity';
 import { Message } from 'src/message/message.entity';
 import { Phone } from 'src/phone/phone.entity';
-import { Entity, Column, PrimaryGeneratedColumn, JoinTable, ManyToOne, JoinColumn, UpdateDateColumn, OneToOne, ManyToMany, OneToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, JoinTable, ManyToOne, JoinColumn, UpdateDateColumn, CreateDateColumn, ManyToMany, OneToMany } from 'typeorm';
 
 @Entity()
 export class Contact {
@@ -23,11 +23,11 @@ export class Contact {
     @Column( { default: 0 } )
     group_number: number;
 
-    // @Column({ type: 'timestamp', default: () => 'GETDATE()' })
-    // created_at: Date;c
-
-    // @Column({ type: 'timestamp', default: () => 'GETDATE()', onUpdate: 'GETDATE()' })
-    // updated_at: Date;
+    @CreateDateColumn({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+    createdAt: Date;
+  
+    @UpdateDateColumn({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
+    updatedAt: Date;
 
     // Contact has a one Phone
     @ManyToOne(() => Phone, phone => phone.contacts)

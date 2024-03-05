@@ -23,10 +23,10 @@ export class WebhookController {
     async hanldeWebhook() {
         // await this.whatsappService.loadPhoneList();
         // await this.whatsappService.loadContacts();
-        // await this.whatsappService.loadImagesInContacts();
+        await this.whatsappService.loadImagesInContacts();
         await this.whatsappService.loadImagesInGroups();
-        // await this.whatsappService.loadGroupsIntegrants();
-        // await this.whatsappService.loadGroupConversations();
+        await this.whatsappService.loadGroupsIntegrants();
+        await this.whatsappService.loadGroupConversations();
 
         return { status: 'Cargando datos en segundo plano' };
     }

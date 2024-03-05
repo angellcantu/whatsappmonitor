@@ -2,7 +2,7 @@ import { join } from 'path';
 import { Contact } from 'src/contact/contact.entity';
 import { Conversation } from 'src/conversation/conversation.entity';
 import { Integrant } from 'src/integrant/integrant.entity';
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToOne, UpdateDateColumn } from 'typeorm';
+import { Entity, CreateDateColumn, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn, OneToOne, UpdateDateColumn } from 'typeorm';
 
 @Entity()
 export class Message {
@@ -13,7 +13,7 @@ export class Message {
     uuid: string;
     @Column()
     type: string;
-    @Column({nullable: true})
+    @Column({nullable: true, type: 'varchar',  length: '5000'})
     text: string;
     @Column({nullable: true})
     url: string;
@@ -32,11 +32,11 @@ export class Message {
     @Column({nullable: true, unique: true})
     _serialized: string;
 
-    // @Column({ type: 'timestamp', default: () => 'GETDATE()' })
-    // created_at: Date;
-
-    // @Column({ type: 'timestamp', default: () => 'GETDATE()', onUpdate: 'GETDATE()' })
-    // updated_at: Date;
+    @CreateDateColumn({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+    createdAt: Date;
+  
+    @UpdateDateColumn({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
+    updatedAt: Date;
 
     @ManyToOne(() => Conversation, conversation => conversation.messages)
     @JoinColumn()

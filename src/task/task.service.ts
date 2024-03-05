@@ -18,7 +18,7 @@ export class UpdateGroupInfoService {
     private async loadGroupInfo(): Promise<void> {
         console.log("SE ACTUALIZAN LOS GRUPOS EN SEGUNDO PLANO");
         await this._whatsappService.loadGroupsIntegrants();
-        // await this._whatsappService.loadGroupConversations();
+        await this._whatsappService.loadGroupConversations();
         await this._whatsappService.loadImagesInContacts();
         await this._whatsappService.loadImagesInGroups();
     }

@@ -30,9 +30,37 @@ export class GroupService {
 
     async findGroupsWithIntegrants() {
         try {
-            const groups: Group[] = await this.groupRepository.find({ relations: ['integrants'] });
-
-            return groups;
+            const rawQuery = `
+                SELECT g.id, g.id_group, g.name, g.image, g.config, 
+                       g.id_municipio, g.createdAt, g.updatedAt, g.status,
+	                   MAX(m.createdAt) AS last_message_date
+	            FROM [ycrwrusj_botwats].[group] as g
+	                LEFT JOIN group_integrant gi ON gi.group_id = g.id
+	                LEFT JOIN integrant i ON i.id = gi.integrant_id
+	                LEFT JOIN conversation c ON c.id_conversation = g.id_group
+	                LEFT JOIN message m ON m.conversationId = c.id
+	                GROUP BY 
+                        g.id, g.id_group, g.name, g.image, 
+                        g.config, 
+                        g.id_municipio,
+                        g.createdAt, 
+                        g.updatedAt, 
+                        g.status;`;
+            // const groups: Group[] = await this.groupRepository.find({ relations: ['integrants'] });
+            const result: Group[] = await this.groupRepository.query(rawQuery);
+            return result.map(result => {
+                const group = new Group();
+                group.id = result.id,
+                group.id_group = result.id_group,
+                group.name = result.name,
+                group.image = result.image,
+                group.config = null,
+                group.id_municipio = result.id_municipio,
+                group.createdAt = result.createdAt,
+                group.status = result.status,
+                group.last_message_date = result.last_message_date
+                return group;
+            });
         } catch (erorr) {
 
         }
