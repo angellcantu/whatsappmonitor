@@ -33,7 +33,8 @@ export class GroupService {
             const rawQuery = `
                 SELECT g.id, g.id_group, g.name, g.image, g.config, 
                        g.id_municipio, g.createdAt, g.updatedAt, g.status,
-	                   MAX(m.createdAt) AS last_message_date
+	                   MAX(m.createdAt) AS last_message_date,
+                       COUNT(DISTINCT integrant_id) AS integrants
 	            FROM [ycrwrusj_botwats].[group] as g
 	                LEFT JOIN group_integrant gi ON gi.group_id = g.id
 	                LEFT JOIN integrant i ON i.id = gi.integrant_id
@@ -46,7 +47,7 @@ export class GroupService {
                         g.createdAt, 
                         g.updatedAt, 
                         g.status;`;
-            // const groups: Group[] = await this.groupRepository.find({ relations: ['integrants'] });
+
             const result: Group[] = await this.groupRepository.query(rawQuery);
             return result.map(result => {
                 const group = new Group();
@@ -58,7 +59,8 @@ export class GroupService {
                 group.id_municipio = result.id_municipio,
                 group.createdAt = result.createdAt,
                 group.status = result.status,
-                group.last_message_date = result.last_message_date
+                group.last_message_date = result.last_message_date,
+                group.integrants = result.integrants
                 return group;
             });
         } catch (erorr) {
