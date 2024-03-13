@@ -48,6 +48,8 @@ export class GroupService {
                         g.updatedAt, 
                         g.status;`;
 
+            const groups: Group[] = await this.groupRepository.find({ relations: ['integrants'] });
+
             const result: Group[] = await this.groupRepository.query(rawQuery);
             return result.map(result => {
                 const group = new Group();
