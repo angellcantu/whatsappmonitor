@@ -58,7 +58,7 @@ export class GroupService {
                 group.name = result.name,
                 group.image = result.image,
                 group.config = null,
-                group.id_municipio = result.id_municipio,
+                group.id_municipio = result.id_municipio === null ? 0 : result.id_municipio,
                 group.createdAt = result.createdAt,
                 group.status = result.status,
                 group.last_message_date = result.last_message_date,
