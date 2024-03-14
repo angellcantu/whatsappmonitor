@@ -28,6 +28,16 @@ export class GroupController {
         }
     }
 
+    @Get('municipios')
+    async AllMunicipios() {
+        const municipios = await this.groupService.findMunicipios();
+        if (municipios.length > 0) {
+            return municipios;
+        } else {
+            return [];
+        }
+    }
+
     @Get(':groupId/messages')
     async GroupMessages(@Param('groupId') groupId: string) {
         console.log(groupId);

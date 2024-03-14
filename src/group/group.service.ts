@@ -9,6 +9,7 @@ import { Message } from "src/message/message.entity";
 import { MessageService } from "src/message/message.service";
 import { IIntegrant } from "src/integrant/IIntegrant.interface";
 import { Integrant } from "src/integrant/integrant.entity";
+import { IMunicipio } from "src/municipio/municipio.interface";
 
 @Injectable()
 export class GroupService {
@@ -32,7 +33,8 @@ export class GroupService {
         try {
             const rawQuery = `
                 SELECT g.id, g.id_group, g.name, g.image, g.config, 
-                       g.id_municipio, g.createdAt, g.updatedAt, g.status,
+                       g.id_municipio,
+                       g.createdAt, g.updatedAt, g.status,
 	                   MAX(m.createdAt) AS last_message_date,
                        COUNT(DISTINCT integrant_id) AS integrants
 	            FROM [ycrwrusj_botwats].[group] as g
@@ -40,6 +42,7 @@ export class GroupService {
 	                LEFT JOIN integrant i ON i.id = gi.integrant_id
 	                LEFT JOIN conversation c ON c.id_conversation = g.id_group
 	                LEFT JOIN message m ON m.conversationId = c.id
+                    LEFT JOIN municipio mn ON mn.id = g.id_municipio
 	                GROUP BY 
                         g.id, g.id_group, g.name, g.image, 
                         g.config, 
@@ -48,7 +51,7 @@ export class GroupService {
                         g.updatedAt, 
                         g.status;`;
 
-            const groups: Group[] = await this.groupRepository.find({ relations: ['integrants'] });
+            // const groups: Group[] = await this.groupRepository.find({ relations: ['integrants'] });
 
             const result: Group[] = await this.groupRepository.query(rawQuery);
             return result.map(result => {
@@ -66,6 +69,24 @@ export class GroupService {
                 return group;
             });
         } catch (erorr) {
+
+        }
+    }
+
+    async findMunicipios() {
+        try {
+            const rawQuery = `
+                SELECT id, name FROM municipio
+            `;
+            const result: IMunicipio[] = await this.groupRepository.query(rawQuery);
+            return result.map(result => {
+                const municipio: IMunicipio = {
+                    id: result.id,
+                    name: result.name
+                }
+                return municipio;
+            });
+        } catch (error) {
 
         }
     }

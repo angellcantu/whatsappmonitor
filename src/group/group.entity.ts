@@ -27,7 +27,7 @@ export class Group {
     })
     integrants: Integrant[]
 
-    @Column({ nullable: true })
+    @Column({ nullable: true, default: 0})
     id_municipio: number;
 
     @CreateDateColumn({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
