@@ -43,7 +43,7 @@ export class Group {
     last_message_date: string;
 
     @Column({ nullable: true, default: 0 })
-    ïd_personaje: number;
+    id_personaje: number;
 
     @Column({ nullable: true })
     descripcion: string;
