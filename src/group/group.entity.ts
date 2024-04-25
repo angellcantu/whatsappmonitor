@@ -50,4 +50,7 @@ export class Group {
 
     @Column({ nullable: true, default: 0 })
     id_responable: number;
+
+    @Column({ nullable: true })
+    Responsable: string;
 }
