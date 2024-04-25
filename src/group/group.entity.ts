@@ -53,4 +53,10 @@ export class Group {
 
     @Column({ nullable: true })
     Responsable: string;
+
+    @CreateDateColumn({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
+    FechaModificacion: Date;
+
+    @Column({ nullable: true, default: 0 })
+    IdUsuarioModifica: number;
 }
