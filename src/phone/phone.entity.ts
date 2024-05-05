@@ -21,6 +21,8 @@ export class Phone {
     data: Record<string, any>;
     @Column({nullable: true})
     mult_device: boolean;
+    @Column({nullable: true})
+    nombre_telefono: string;
 
     @CreateDateColumn({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
     createdAt: Date;

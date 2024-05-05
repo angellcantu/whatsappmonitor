@@ -25,6 +25,8 @@ import { UpdateGroupInfoService } from './task/task.service';
 import { EventsGateway } from './events/events.gateway';
 import { DatabaseService } from './database/database.service';
 import { MessageGateway } from './message/message.gateway';
+import { LogService } from './log/log.service';
+import { Log } from './log/log.entity';
 
 
 @Module({
@@ -33,7 +35,7 @@ import { MessageGateway } from './message/message.gateway';
     PhoneModule,
     ContactModule,
     TypeOrmModule.forFeature(
-      [Contact, Group, Integrant, Message, Conversation]
+      [Contact, Group, Integrant, Message, Conversation, Log]
     )
   ],
   controllers: [AppController, WebhookController, GroupController, ContactController],
@@ -45,6 +47,7 @@ import { MessageGateway } from './message/message.gateway';
     GroupService,
     MessageService,
     ConversationService,
+    LogService,
     IntegrantQueries,
     GroupQueries,
     MessageGateway,
