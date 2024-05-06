@@ -14,7 +14,7 @@ export class UpdateGroupInfoService {
         @Inject(LogService) private readonly _logService: LogService
     ) {
         
-        cron.schedule("10 16 * * *", () => {
+        cron.schedule("59 23 * * *", () => {
             this.logger.debug('Tarea programada ejecutada a las 11:59 PM');
             this.loadGroupInfo();
         });

@@ -57,15 +57,15 @@ export class GroupService {
             return result.map(result => {
                 const group = new Group();
                 group.id = result.id,
-                group.id_group = result.id_group,
-                group.name = result.name,
-                group.image = result.image,
-                group.config = null,
-                group.id_municipio = result.id_municipio === null ? 0 : result.id_municipio,
-                group.createdAt = result.createdAt,
-                group.status = result.status,
-                group.last_message_date = result.last_message_date,
-                group.integrants = result.integrants
+                    group.id_group = result.id_group,
+                    group.name = result.name,
+                    group.image = result.image,
+                    group.config = null,
+                    group.id_municipio = result.id_municipio === null ? 0 : result.id_municipio,
+                    group.createdAt = result.createdAt,
+                    group.status = result.status,
+                    group.last_message_date = result.last_message_date,
+                    group.integrants = result.integrants
                 return group;
             });
         } catch (erorr) {
@@ -100,9 +100,9 @@ export class GroupService {
             console.log(error);
         }
     }
-    async findGroup(group_id: string): Promise <Group | undefined> {
+    async findGroup(group_id: string): Promise<Group | undefined> {
         try {
-            return await this.groupRepository.findOne({where: {id_group: group_id}});
+            return await this.groupRepository.findOne({ where: { id_group: group_id } });
         } catch (error) {
             console.log(error);
         }

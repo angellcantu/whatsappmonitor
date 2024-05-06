@@ -1,10 +1,12 @@
 import { Controller, Get, Post, Body, Param } from "@nestjs/common";
 import { GroupService } from "./group.service";
+import { WhatsappService } from "src/whatsapp/whatsapp.service";
 
 @Controller('group')
 export class GroupController {
     constructor(
-        private readonly groupService: GroupService
+        private readonly groupService: GroupService,
+        private readonly whatsappService: WhatsappService
     ) { }
 
     @Get('groups')
@@ -48,5 +50,20 @@ export class GroupController {
         } else {
             return [];
         }
+    }
+
+    @Get(':actualizarGrupos')
+    async ActualizarGrupos() {
+        try {
+            await this.whatsappService.loadPhoneList();
+            await this.whatsappService.loadContacts();
+            await this.whatsappService.loadImagesInContacts();
+            await this.whatsappService.loadImagesInGroups();
+            await this.whatsappService.loadGroupsIntegrants();
+            await this.whatsappService.loadGroupConversations();
+        } catch (error) {
+            console.log(error);
+        }
+
     }
 }
