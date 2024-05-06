@@ -52,7 +52,7 @@ export class GroupController {
         }
     }
 
-    @Get(':actualizarGrupos')
+    @Get('actualizarGrupos')
     async ActualizarGrupos() {
         try {
             await this.whatsappService.loadPhoneList();
