@@ -55,12 +55,9 @@ export class GroupController {
     @Get('actualizarGrupos')
     async ActualizarGrupos() {
         try {
-           await this.whatsappService.loadPhoneList();
-            await this.whatsappService.loadContacts();
+           
             await this.whatsappService.loadImagesInContacts();
             await this.whatsappService.loadImagesInGroups();
-            await this.whatsappService.loadGroupsIntegrants();
-            await this.whatsappService.loadGroupConversations();
         } catch (error) {
             console.log(error);
         }
