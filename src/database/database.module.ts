@@ -1,16 +1,14 @@
+'use strict';
+
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { getConnectionOptions } from 'typeorm';
+import { DatabaseService } from './database.service';
 
 @Module({
-    imports: [TypeOrmModule.forRootAsync({
-
-        useFactory: async () => 
-        Object.assign(await getConnectionOptions(), {
-            autoLoadEnitites: true,
-        }),
-    }),
+    imports: [
+        TypeOrmModule.forRootAsync({
+            useClass: DatabaseService
+        })
     ]
 })
-
-export class DatabaseModule {}
+export class DatabaseModule { }

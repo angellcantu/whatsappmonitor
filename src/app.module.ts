@@ -1,4 +1,7 @@
+'use strict';
+
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -23,35 +26,37 @@ import { IntegrantQueries } from './integrant/integrant.queries';
 import { ContactController } from './contact/contact.controller';
 import { UpdateGroupInfoService } from './task/task.service';
 import { EventsGateway } from './events/events.gateway';
-import { DatabaseService } from './database/database.service';
 import { MessageGateway } from './message/message.gateway';
 import { LogService } from './log/log.service';
 import { Log } from './log/log.entity';
+import { join } from 'path';
 
 
 @Module({
-  imports: [
-    DatabaseModule,
-    PhoneModule,
-    ContactModule,
-    TypeOrmModule.forFeature(
-      [Contact, Group, Integrant, Message, Conversation, Log]
-    )
-  ],
-  controllers: [AppController, WebhookController, GroupController, ContactController],
-  providers: [
-    AppService,
-    WebhookService,
-    WhatsappService,
-    IntegrantService,
-    GroupService,
-    MessageService,
-    ConversationService,
-    LogService,
-    IntegrantQueries,
-    GroupQueries,
-    MessageGateway,
-    UpdateGroupInfoService
-  ],
+	imports: [
+		ConfigModule.forRoot({
+			isGlobal: true,
+			envFilePath: join(__dirname, '../.env')
+		}),
+		DatabaseModule,
+		PhoneModule,
+		ContactModule,
+		TypeOrmModule.forFeature([Contact, Group, Integrant, Message, Conversation, Log])
+	],
+	controllers: [AppController, WebhookController, GroupController, ContactController],
+	providers: [
+		AppService,
+		WebhookService,
+		WhatsappService,
+		IntegrantService,
+		GroupService,
+		MessageService,
+		ConversationService,
+		LogService,
+		IntegrantQueries,
+		GroupQueries,
+		MessageGateway,
+		UpdateGroupInfoService
+	],
 })
 export class AppModule { }
