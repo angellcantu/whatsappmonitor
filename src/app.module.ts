@@ -25,7 +25,7 @@ import { GroupQueries } from './group/group.queries';
 import { IntegrantQueries } from './integrant/integrant.queries';
 import { ContactController } from './contact/contact.controller';
 import { UpdateGroupInfoService } from './task/task.service';
-import { EventsGateway } from './events/events.gateway';
+import { UserModule } from './user/user.module';
 import { MessageGateway } from './message/message.gateway';
 import { LogService } from './log/log.service';
 import { Log } from './log/log.entity';
@@ -41,7 +41,8 @@ import { join } from 'path';
 		DatabaseModule,
 		PhoneModule,
 		ContactModule,
-		TypeOrmModule.forFeature([Contact, Group, Integrant, Message, Conversation, Log])
+		TypeOrmModule.forFeature([Contact, Group, Integrant, Message, Conversation, Log]),
+		UserModule
 	],
 	controllers: [AppController, WebhookController, GroupController, ContactController],
 	providers: [
