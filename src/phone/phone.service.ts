@@ -1,8 +1,10 @@
-import { Injectable } from "@nestjs/common";
+'use strict';
+
+import { Injectable, HttpException, HttpStatus } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { Repository, SelectQueryBuilder } from "typeorm";
 import { Phone } from './phone.entity'
-import { IPhone } from "./phone.interface";
+import { CreatePhoneDto } from './phone.dto';
 
 @Injectable()
 export class PhoneService {
@@ -26,28 +28,20 @@ export class PhoneService {
         return await this.phoneRepository.find();
     }
 
-    async createPhone(_phone: IPhone): Promise<Phone | undefined> {
+    async create(phone: CreatePhoneDto): Promise<Phone | undefined> {
         try {
-            const phone: Phone = await this.phoneRepository.create({
-                phone_id: _phone.phone_id,
-                number: _phone.number,
-                status: _phone.status,
-                type: _phone.type,
-                name: _phone.name, 
-                data: _phone.data,
-                mult_device: _phone.multi_device
-            });
-
-            return await this.phoneRepository.save(phone)
+            let record = this.phoneRepository.create(phone);
+            await this.phoneRepository.save(record);
+            return record;
         } catch (error) {
-            console.log(error)
+            throw new HttpException(error.toString(), HttpStatus.CONFLICT);
         }
     }
 
-    async createPhones(_phones: IPhone[]): Promise<void> {
+    async createPhones(_phones: Array<CreatePhoneDto>): Promise<void> {
         try {
             for (const phone of _phones) {
-                await this.createPhone(phone);
+                await this.create(phone);
             }
         } catch (error) {
             console.log(error);
@@ -55,14 +49,30 @@ export class PhoneService {
     }
 
     async findPhone(phone_id: number): Promise<Phone> {
-        let phone: Phone;
         try {
-            phone = await this.phoneRepository.findOne({ where: { phone_id: phone_id } });
+            let phone: Phone = await this.phoneRepository.findOne({ where: { phone_id: phone_id } });
+            if (!phone) {
+                throw new HttpException(`The phone with identifier ${phone_id} does not exist`, HttpStatus.NOT_FOUND);
+            }
+            return phone;
         } catch (error) {
-            console.log(error)
+            throw new HttpException(error.toString(), HttpStatus.CONFLICT);
         }
+    }
 
-        return phone;
+    async findPhoneById(id: number): Promise<Phone> {
+        try {
+            let phone = await this.phoneRepository.findOne({
+                relations: ['licences'],
+                where: { id: id }
+            });
+            if (!phone) {
+                throw new HttpException(`The phone with identifier ${id} does not exist`, HttpStatus.NOT_FOUND);
+            }
+            return phone;
+        } catch (error) {
+            throw new HttpException(error.toString(), HttpStatus.CONFLICT);
+        }
     }
 
     async deletePhone(phone_id: number): Promise<Phone> {
@@ -78,7 +88,7 @@ export class PhoneService {
         } catch (error) {
             console.log(error);
         }
-
         return phone;
     }
+    
 }

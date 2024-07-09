@@ -39,10 +39,11 @@ export class WhatsappService {
         return this.phoneService.findAllPhones();
     }
 
+    // TODO: Work in this function in the future
     // Permite cargar la lista de phones a la base de datos
     async loadPhoneList(): Promise<void> {
         const listPhones: any[] = await this.Apiconnection('/listPhones');
-        const _phones: IPhone[] = [];
+        /*const _phones: IPhone[] = [];
         for (const phone of listPhones) {
             _phones.push({
                 phone_id: phone.id,
@@ -54,7 +55,7 @@ export class WhatsappService {
                 multi_device: phone.multi_device
             });
         }
-        await this.phoneService.createPhones(_phones);
+        await this.phoneService.createPhones(_phones);*/
     }
 
     async loadContacts(): Promise<void> {

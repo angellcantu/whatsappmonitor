@@ -1,5 +1,4 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, OneToMany, UpdateDateColumn } from 'typeorm';
-import { Group } from 'src/group/group.entity';
 
 @Entity()
 export class User {
