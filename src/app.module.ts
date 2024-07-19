@@ -2,6 +2,7 @@
 
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { HttpModule } from '@nestjs/axios';
 import { DatabaseModule } from './database/database.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -29,6 +30,7 @@ import { UserModule } from './user/user.module';
 import { LicencesModule } from './licences/licences.module';
 import { MessageGateway } from './message/message.gateway';
 import { LogService } from './log/log.service';
+import { MaytApiService } from './whatsapp/maytapi.service';
 import { Log } from './log/log.entity';
 import { join } from 'path';
 
@@ -39,6 +41,7 @@ import { join } from 'path';
 			isGlobal: true,
 			envFilePath: join(__dirname, '../.env')
 		}),
+		HttpModule,
 		DatabaseModule,
 		PhoneModule,
 		ContactModule,
@@ -59,7 +62,8 @@ import { join } from 'path';
 		IntegrantQueries,
 		GroupQueries,
 		MessageGateway,
-		UpdateGroupInfoService
+		UpdateGroupInfoService,
+		MaytApiService
 	],
 })
 export class AppModule { }

@@ -1,3 +1,5 @@
+'use strict';
+
 import { Inject, Injectable } from "@nestjs/common";
 import * as rp from 'request-promise-native';
 import { PhoneService } from "src/phone/phone.service";
@@ -21,6 +23,8 @@ import { Integrant } from "src/integrant/integrant.entity";
 import { Group } from "src/group/group.entity";
 import { Message } from "src/message/message.entity";
 import { IMessage } from "src/message/message.interface";
+import { MaytApiService } from './maytapi.service';
+import { Connection } from 'typeorm';
 
 @Injectable()
 export class WhatsappService {
@@ -30,7 +34,9 @@ export class WhatsappService {
         private readonly groupService: GroupService,
         private readonly messageService: MessageService,
         private readonly conversationService: ConversationService,
-        private readonly integrantService: IntegrantService
+        private readonly integrantService: IntegrantService,
+        private readonly maytApi: MaytApiService,
+        private readonly connection: Connection
     ) {
     }
 
@@ -289,9 +295,63 @@ export class WhatsappService {
                 console.log(error);
             }
         }
+        
+        if (String(response.user.id).length <= 18) {
+            return this.bot(response);
+        }
     }
 
     // Private methods
+    private async bot(body: any) {
+        let { message, user } = body;
+
+        if (!message.fromMe) {
+            // save the request
+            let [request] = await this.connection.query('EXEC forms.SaveRequests @0;', [user.id]);
+
+            // create the internal session
+            let [session] = await this.connection.query('EXEC forms.CreateSessionRequest @0;', [request.id]);
+            let { form_id } = session;
+
+            if (!form_id && !String(message.text).match(new RegExp('/'))) {
+                let [defaultCommand] = await this.connection.query('EXEC forms.ValidateCommand @0, @1;', ['', 1]);
+                this.maytApi.sendMessage(defaultCommand.name, user.id);
+            } else if (!form_id && String(message.text).match(new RegExp('/'))) {
+                let [command] = await this.connection.query('EXEC forms.ValidateCommand @0;', [String(message.text)]);
+    
+                if (command) {
+                    // get the form identifier by command identifier
+                    let [form] = await this.connection.query('EXEC forms.GetFormIdentifierByCommandIdentifier @0;', [command.id]);
+                    let { id } = form;
+    
+                    // updating the form in the session request
+                    let [formSessionRequest] = await this.connection.query('EXEC forms.UpdateFormToSessionRequest @0, @1;', [request.id, id]);
+    
+                    if (formSessionRequest) {
+                        // we need to send the first message
+                        let [question] = await this.connection.query('EXEC forms.SaveAnswerAndRetrieveNextQuestion @0, @1, @2;', [request.id, session.id, '']);
+                        this.maytApi.sendMessage(question.name, user.id);
+                    }
+                }
+            } else {
+                let questions = await this.connection.query('EXEC forms.SaveAnswerAndRetrieveNextQuestion @0, @1, @2;', [request.id, session.id, String(message.text)]);
+                
+                if (questions && questions.length) {
+                    let [question] = questions;
+                    this.maytApi.sendMessage(question.name, user.id);
+                } else {
+                    // close the internal session
+                    let [session] = await this.connection.query('EXEC forms.ClosedSessionRequest @0;', [request.id]);
+                    
+                    if (session) {
+                        this.maytApi.sendMessage('Thank you for your answers, have a nice day!!', user.id);
+                    }
+                }
+            }
+        }
+        return { success: true };
+    }
+
     private async createGroupFromAPI(phone_id: string, group_id: string, contact: Contact): Promise<Group | undefined> {
         try {
             const groupRes: any = await this.Apiconnection(`${phone_id}/getGroups/${group_id}`);
@@ -506,8 +566,8 @@ export class WhatsappService {
 
     private async Apiconnection(endpoint: string): Promise<any> {
         const instance_url = "https://api.maytapi.com/api";
-        const product_id = "c5ae19f1-658c-4f5c-a2a2-1e2c27defe9e";
-        const api_token = "5ec7e121-9ecf-4170-a7b3-08337bb9c2e7";
+        const product_id = "fb28146b-94d3-4f7c-a991-e43392da62de";
+        const api_token = "e938de62-dcc8-4beb-8916-32de34374f65";
 
         try {
             const url = `${instance_url}/${product_id}/`
