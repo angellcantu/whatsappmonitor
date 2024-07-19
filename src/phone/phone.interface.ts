@@ -1,4 +1,7 @@
+'use strict';
+
 import { Contact } from "src/contact/contact.entity";
+import { Licences } from '../licences/licences.entity';
 
 export interface IPhone {
     phone_id: number;
@@ -9,4 +12,5 @@ export interface IPhone {
     [data: string]: any;
     multi_device: boolean;
     contacts?: Contact[];
+    licences: Licences
   }
