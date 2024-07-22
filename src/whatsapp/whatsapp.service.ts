@@ -344,7 +344,7 @@ export class WhatsappService {
                     let [session] = await this.connection.query('EXEC forms.ClosedSessionRequest @0;', [request.id]);
                     
                     if (session) {
-                        this.maytApi.sendMessage('Thank you for your answers, have a nice day!!', user.id);
+                        this.maytApi.sendMessage('Gracias por tus respuestas!!', user.id);
                     }
                 }
             }
