@@ -36,25 +36,24 @@ export class WebhookController {
         return { status: 'Cargando datos en segundo plano' };
     }
 
-    /**
-     * @deprecated
-     */
     @Post('/test')
     async storedProcedure(@Body() body: any) {
+        let { message, user } = body;
+
         // save the request
-        let [request] = await this.connection.query('EXEC forms.SaveRequests @0;', [body.chat]);
+        let [request] = await this.connection.query('EXEC forms.SaveRequests @0;', [user.id]);
         
         // create the internal session
         let [session] = await this.connection.query('EXEC forms.CreateSessionRequest @0;', [request.id]);
         let { form_id } = session;
 
-        if (!form_id && !String(body.text).match(new RegExp('/'))) {
+        if (!form_id && !String(message.text).match(new RegExp('/'))) {
             console.log('Invalid command');
-            let [defaultCommand] = await this.connection.query('EXEC forms.ValidateCommand @0, @1;', ['', 1]);
-            console.log(defaultCommand);
-        } else if (!form_id && String(body.text).match(new RegExp('/'))) {
+            let [_default] = await this.connection.query('EXEC forms.ValidateCommand @0, @1;', ['', 2]);
+            console.log(`${_default.message}${_default.name}`);
+        } else if (!form_id && String(message.text).match(new RegExp('/'))) {
             console.log('Valid command and starting the new form');
-            let [command] = await this.connection.query('EXEC forms.ValidateCommand @0;', [body.text]);
+            let [command] = await this.connection.query('EXEC forms.ValidateCommand @0;', [message.text]);
 
             if (command) {
                 // get the form identifier by command identifier
@@ -71,11 +70,14 @@ export class WebhookController {
                     console.log('Sending the first question');
                     console.log(question);
                 }
+            } else {
+                body.message.text = 'Hi';
+                return this.storedProcedure(body);
             }
         } else {
             console.log('Continue with the other process and sending the next question');
 
-            let questions = await this.connection.query('EXEC forms.SaveAnswerAndRetrieveNextQuestion @0, @1, @2;', [request.id, session.id, String(body.text)]);
+            let questions = await this.connection.query('EXEC forms.SaveAnswerAndRetrieveNextQuestion @0, @1, @2;', [request.id, session.id, String(message.text)]);
             
             if (questions && questions.length) {
                 let [question] = questions;
@@ -85,7 +87,8 @@ export class WebhookController {
                 let [session] = await this.connection.query('EXEC forms.ClosedSessionRequest @0;', [request.id]);
                 
                 if (session) {
-                    console.log('The form has been finished, thank you!!');
+                    let [defaultCommand] = await this.connection.query('EXEC forms.ValidateCommand @0, @1;', ['', 1]);
+                    console.log(defaultCommand);
                 }
             }
         }
