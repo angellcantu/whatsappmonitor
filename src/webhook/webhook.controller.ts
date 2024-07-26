@@ -83,10 +83,23 @@ export class WebhookController {
                 let [question] = questions;
                 console.log(question);
             } else {
+                // validate if the form has command response - this only apply if the forma has a single question
+                let responses = await this.connection.query('forms.ValidateFormResponses @0;', [request.id]);
+
+                if (responses && responses.length) {
+                    let [response] = responses;
+                    let [answer] = await this.connection.query('forms.RetrieveFormResponse @0, @1, @2;', [response.name, request.id, session.id]);
+
+                    if (answer) {
+                        console.log(answer.name);
+                        console.log(answer.latitude, answer.longitude);
+                    }
+                }
+
                 // close the internal session
-                let [session] = await this.connection.query('EXEC forms.ClosedSessionRequest @0;', [request.id]);
+                let [_session] = await this.connection.query('EXEC forms.ClosedSessionRequest @0;', [request.id]);
                 
-                if (session) {
+                if (_session) {
                     let [defaultCommand] = await this.connection.query('EXEC forms.ValidateCommand @0, @1;', ['', 1]);
                     console.log(defaultCommand);
                 }
