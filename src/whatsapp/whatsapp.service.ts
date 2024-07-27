@@ -314,8 +314,8 @@ export class WhatsappService {
             let { form_id } = session;
 
             if (!form_id && !String(message.text).match(new RegExp('/'))) {
-                let [defaultCommand] = await this.connection.query('EXEC forms.ValidateCommand @0, @1;', ['', 1]);
-                this.maytApi.sendMessage(defaultCommand.name, user.id);
+                let [_default] = await this.connection.query('EXEC forms.ValidateCommand @0, @1;', ['', 2]);
+                this.maytApi.sendMessage(`${_default.message}${_default.name}`, user.id);
             } else if (!form_id && String(message.text).match(new RegExp('/'))) {
                 let [command] = await this.connection.query('EXEC forms.ValidateCommand @0;', [String(message.text)]);
     
@@ -332,19 +332,51 @@ export class WhatsappService {
                         let [question] = await this.connection.query('EXEC forms.SaveAnswerAndRetrieveNextQuestion @0, @1, @2;', [request.id, session.id, '']);
                         this.maytApi.sendMessage(question.name, user.id);
                     }
+                } else {
+                    body.message.text = 'Hi';
+                    return this.bot(body);
                 }
             } else {
-                let questions = await this.connection.query('EXEC forms.SaveAnswerAndRetrieveNextQuestion @0, @1, @2;', [request.id, session.id, String(message.text)]);
+                let answer: string = '';
+
+                if (message.type == 'location') {
+                    answer = message.payload;
+                } else if (message.type == 'text') {
+                    answer = message.text;
+                }
+
+                let questions = await this.connection.query('EXEC forms.SaveAnswerAndRetrieveNextQuestion @0, @1, @2;', [request.id, session.id, answer]);
                 
                 if (questions && questions.length) {
                     let [question] = questions;
                     this.maytApi.sendMessage(question.name, user.id);
                 } else {
+                    // validate if the form has command response, this only apply if the form has a single question
+                    let responses = await this.connection.query('forms.ValidateFormResponses @0;', [request.id]);
+
+                    if (responses && responses.length) {
+                        let [response] = responses;
+                        let answers = await this.connection.query('forms.RetrieveFormResponse @0, @1, @2;', [response.name, request.id, session.id]);
+
+                        if (answers && answers.length) {
+                            let [answer] = answers;
+
+                            // send the message
+                            await this.maytApi.sendMessage(answer.name, user.id);
+                            
+                            if (answer.latitude && answer.longitude) {
+                                // send here the location
+                                this.maytApi.sendLocation(answer.latitude, answer.longitude, user.id);
+                            }
+                        }
+                    }
+
                     // close the internal session
-                    let [session] = await this.connection.query('EXEC forms.ClosedSessionRequest @0;', [request.id]);
+                    let [_session] = await this.connection.query('EXEC forms.ClosedSessionRequest @0;', [request.id]);
                     
-                    if (session) {
-                        this.maytApi.sendMessage('Gracias por tus respuestas!!', user.id);
+                    if (_session) {
+                        let [defaultCommand] = await this.connection.query('EXEC forms.ValidateCommand @0, @1;', ['', 1]);
+                        this.maytApi.sendMessage(defaultCommand.name, user.id);
                     }
                 }
             }
