@@ -76,8 +76,15 @@ export class WebhookController {
             }
         } else {
             console.log('Continue with the other process and sending the next question');
+            let answer: string = '';
 
-            let questions = await this.connection.query('EXEC forms.SaveAnswerAndRetrieveNextQuestion @0, @1, @2;', [request.id, session.id, String(message.text)]);
+            if (message.type == 'location') {
+                answer = message.payload;
+            } else if (message.type == 'text') {
+                answer = message.text;
+            }
+
+            let questions = await this.connection.query('EXEC forms.SaveAnswerAndRetrieveNextQuestion @0, @1, @2;', [request.id, session.id, answer]);
             
             if (questions && questions.length) {
                 let [question] = questions;
@@ -88,9 +95,10 @@ export class WebhookController {
 
                 if (responses && responses.length) {
                     let [response] = responses;
-                    let [answer] = await this.connection.query('forms.RetrieveFormResponse @0, @1, @2;', [response.name, request.id, session.id]);
+                    let answers = await this.connection.query('forms.RetrieveFormResponse @0, @1, @2;', [response.name, request.id, session.id]);
 
-                    if (answer) {
+                    if (answers && answers.length) {
+                        let [answer] = answers;
                         console.log(answer.name);
                         console.log(answer.latitude, answer.longitude);
                     }
