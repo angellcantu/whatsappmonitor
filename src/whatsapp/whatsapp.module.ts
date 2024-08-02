@@ -5,6 +5,7 @@ import { WhatsappService } from './whatsapp.service';
 import { PhoneService } from 'src/phone/phone.service';
 import { ContactService } from 'src/contact/contact.service';
 import { MaytApiService } from './maytapi.service';
+import { FtpService } from './ftp.service';
 
 @Module({
     imports: [
@@ -16,7 +17,8 @@ import { MaytApiService } from './maytapi.service';
         WhatsappService,
         PhoneService,
         ContactService,
-        MaytApiService
+        MaytApiService,
+        FtpService
     ]
 })
 export class WhatsappModule { }

@@ -217,11 +217,9 @@ export class GroupService {
         }
     }
 
-    async loadImage(group_id: string, image: string): Promise<void> {
+    async loadImage(id: number, image: string): Promise<void> {
         try {
-            const group: Group = await this.groupRepository.findOne({ where: { id_group: group_id } });
-            group.image = image;
-            await this.groupRepository.update(group.id, { image });
+            await this.groupRepository.update(id, { image: image, updatedAt: new Date() });
         } catch (error) {
             console.log(error);
         }
