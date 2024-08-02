@@ -31,6 +31,7 @@ import { LicencesModule } from './licences/licences.module';
 import { MessageGateway } from './message/message.gateway';
 import { LogService } from './log/log.service';
 import { MaytApiService } from './whatsapp/maytapi.service';
+import { FtpService } from './whatsapp/ftp.service';
 import { Log } from './log/log.entity';
 import { join } from 'path';
 
@@ -63,7 +64,8 @@ import { join } from 'path';
 		GroupQueries,
 		MessageGateway,
 		UpdateGroupInfoService,
-		MaytApiService
+		MaytApiService,
+		FtpService
 	],
 })
 export class AppModule { }

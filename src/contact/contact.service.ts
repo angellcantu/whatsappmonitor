@@ -22,6 +22,7 @@ export class ContactService {
                 GROUP BY c.id, c.name, c.image, c.type, c.phoneId, c.contact_id
             `;
             const results = await this.contactRepository.query(rawQuery);
+
             return results.map(result => {
                 const contact = new Contact();
                 contact.id = result.id,
@@ -110,8 +111,7 @@ export class ContactService {
     async loadImage(contact_id: string, image: string): Promise<void> {
         try {
             const contact: Contact = await this.findOne(contact_id);
-            contact.image = image;
-            await this.contactRepository.update(contact.id, { image });
+            await this.contactRepository.update(contact.id, { image: image, updatedAt: new Date() });
         } catch (error) {
             console.log(error);
         }

@@ -30,7 +30,7 @@ export class MaytApiService {
                 } }
             ).pipe(
                 catchError((error: AxiosError) => {
-                    throw new HttpException(error, HttpStatus.CONFLICT);
+                    throw new HttpException(error.message, HttpStatus.CONFLICT);
                 })
             )
         );
@@ -54,10 +54,90 @@ export class MaytApiService {
                 } }
             ).pipe(
                 catchError((error: AxiosError) => {
-                    throw new HttpException(error, HttpStatus.CONFLICT);
+                    throw new HttpException(error.message, HttpStatus.CONFLICT);
                 })
             )
         );
+        return data;
+    }
+
+    public async getContactsByPhoneIdentifier(phone_id: number) {
+        let { data }: AxiosResponse = await firstValueFrom(
+            this.http.get(
+                `${this.config.get<string>('INSTANCE_URL')}/${this.config.get<string>('PRODUCT_ID')}/${phone_id}/contacts`,
+                { headers: {
+                    'Content-Type': 'application/json',
+                    'x-maytapi-key': this.config.get<string>('API_TOKEN')
+                } }
+            ).pipe(
+                catchError((error: AxiosError) => {
+                    throw new HttpException(error.message, HttpStatus.CONFLICT);
+                })
+            )
+        );
+        return data;
+    }
+
+    public async getContactInformation(id: string) {
+        let { data }: AxiosResponse = await firstValueFrom(
+            this.http.get(
+                `${this.config.get<string>('INSTANCE_URL')}/${this.config.get<string>('PRODUCT_ID')}/${this.config.get<string>('PHONE_ID')}/contact/${id}`,
+                { headers: {
+                    'Content-Type': 'application/json',
+                    'x-maytapi-key': this.config.get<string>('API_TOKEN')
+                } }
+            ).pipe(
+                catchError((error: AxiosError) => {
+                    throw new HttpException(error.message, HttpStatus.CONFLICT);
+                })
+            )
+        );
+        return data;
+    }
+
+    public async getGroupInformation(id: string) {
+        let { data }: AxiosResponse = await firstValueFrom(
+            this.http.get(
+                `${this.config.get<string>('INSTANCE_URL')}/${this.config.get<string>('PRODUCT_ID')}/${this.config.get<string>('PHONE_ID')}/getGroups/${id}`,
+                { headers: {
+                    'Content-Type': 'application/json',
+                    'x-maytapi-key': this.config.get<string>('API_TOKEN')
+                } }
+            ).pipe(
+                catchError((error: AxiosError) => {
+                    throw new HttpException(error.message, HttpStatus.CONFLICT);
+                })
+            )
+        );
+        return data;
+    }
+
+    public async getConversation(id: string) {
+        let { data }: AxiosResponse = await firstValueFrom(
+            this.http.get(
+                `${this.config.get<string>('INSTANCE_URL')}/${this.config.get<string>('PRODUCT_ID')}/${this.config.get<string>('PHONE_ID')}/getConversations/${id}`,
+                { headers: {
+                    'Content-Type': 'application/json',
+                    'x-maytapi-key': this.config.get<string>('API_TOKEN')
+                } }
+            ).pipe(
+                catchError((error: AxiosError) => {
+                    throw new HttpException(error.message, HttpStatus.CONFLICT);
+                })
+            )
+        );
+        return data;
+    }
+
+    public async fetchImage(url: string) {
+        let { data }: AxiosResponse = await firstValueFrom(
+            this.http.get(url, { responseType: 'arraybuffer' }).pipe(
+                catchError((error: AxiosError) => {
+                    throw new HttpException(error.message, HttpStatus.CONFLICT);
+                })
+            )
+        );
+        return data;
     }
 
 }
