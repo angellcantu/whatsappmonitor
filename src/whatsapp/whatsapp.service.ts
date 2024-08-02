@@ -320,7 +320,7 @@ export class WhatsappService {
     private async bot(body: IWebhook) {
         let { message, user } = body;
 
-        if (!message.fromMe) {
+        if (message && !message.fromMe) {
             // save the request
             let [request] = await this.connection.query('EXEC forms.SaveRequests @0;', [user.id]);
 
