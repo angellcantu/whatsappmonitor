@@ -21,7 +21,7 @@ export class DatabaseService implements TypeOrmOptionsFactory {
                 encrypt: false
             },
             synchronize: this.configService.get<string>('NODE_ENV') == 'development' ? true : false,
-            logging: true,
+            logging: false,
             autoLoadEntities: true
         };
     }
