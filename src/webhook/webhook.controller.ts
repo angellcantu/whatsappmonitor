@@ -3,6 +3,7 @@
 import { Controller, Get, Post, Body } from "@nestjs/common";
 import { WhatsappService } from "src/whatsapp/whatsapp.service";
 import { Connection } from 'typeorm';
+import { IWebhook } from '../whatsapp/whatsapp.interface';
 
 @Controller('webhook')
 export class WebhookController {
@@ -39,7 +40,7 @@ export class WebhookController {
     }
 
     @Post('/test')
-    async storedProcedure(@Body() body: any) {
+    async storedProcedure(@Body() body: IWebhook) {
         let { message, user } = body;
 
         // save the request
@@ -51,8 +52,14 @@ export class WebhookController {
 
         if (!form_id && !String(message.text).match(new RegExp('/'))) {
             console.log('Invalid command');
-            let [_default] = await this.connection.query('EXEC forms.ValidateCommand @0, @1;', ['', 2]);
-            console.log(`${_default.message}${_default.name}`);
+            let [_default] = await this.connection.query('EXEC forms.ValidateCommand @0, @1, @2;', ['', 2, request.id]);
+            
+            if (_default.name) {
+                console.log(`${_default.message}${_default.name}`);
+            } else {
+                let [_default] = await this.connection.query('EXEC forms.ValidateCommand @0, @1;', ['', 3]);
+                console.log(`${_default.message}${_default.name}`);
+            }
         } else if (!form_id && String(message.text).match(new RegExp('/'))) {
             console.log('Valid command and starting the new form');
             let [command] = await this.connection.query('EXEC forms.ValidateCommand @0;', [message.text]);

@@ -329,8 +329,14 @@ export class WhatsappService {
             let { form_id } = session;
 
             if (!form_id && !String(message.text).match(new RegExp('/'))) {
-                let [_default] = await this.connection.query('EXEC forms.ValidateCommand @0, @1;', ['', 2]);
-                this.maytApi.sendMessage(`${_default.message}${_default.name}`, user.id);
+                let [_default] = await this.connection.query('EXEC forms.ValidateCommand @0, @1, @2;', ['', 2, request.id]);
+
+                if (_default.name) {
+                    this.maytApi.sendMessage(`${_default.message}${_default.name}`, user.id);
+                } else {
+                    let [_default] = await this.connection.query('EXEC forms.ValidateCommand @0, @1;', ['', 3]);
+                    this.maytApi.sendMessage(`${_default.message}${_default.name}`, user.id);
+                }
             } else if (!form_id && String(message?.text).match(new RegExp('/'))) {
                 let [command] = await this.connection.query('EXEC forms.ValidateCommand @0;', [String(message.text)]);
     
