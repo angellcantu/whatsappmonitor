@@ -1,9 +1,11 @@
 'use strict';
 
-import { Controller, Get, Post, Body } from "@nestjs/common";
+import { Controller, Get, Post, Body, UseInterceptors, HttpException, HttpStatus, UploadedFile } from "@nestjs/common";
+import { FileInterceptor } from '@nestjs/platform-express';
 import { WhatsappService } from "src/whatsapp/whatsapp.service";
 import { Connection } from 'typeorm';
 import { IWebhook } from '../whatsapp/whatsapp.interface';
+import { Request } from 'express';
 
 @Controller('webhook')
 export class WebhookController {
@@ -124,6 +126,22 @@ export class WebhookController {
         }
 
         return { success: true };
+    }
+
+    @Post('/excel')
+    @UseInterceptors(FileInterceptor('file', {
+        fileFilter: (_request: Request, file: Express.Multer.File, callback: (error: Error, acceptFile: boolean) => void) => {
+            if (!Boolean(file.mimetype.match('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'))) {
+                callback(new HttpException(`Invalid file with extension ${file.mimetype}`, HttpStatus.BAD_REQUEST), false);
+            }
+            callback(null, true);
+        }
+    }))
+    excelUpload(@UploadedFile() file: Express.Multer.File): { success: boolean } {
+        this.whatsappService.excelUpload(file);
+        return {
+            success: true
+        };
     }
 
 }

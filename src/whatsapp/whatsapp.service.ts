@@ -23,6 +23,7 @@ import { MaytApiService } from './maytapi.service';
 import { Connection } from 'typeorm';
 import { IWebhook } from './whatsapp.interface';
 import { FtpService } from './ftp.service';
+import * as ExcelToJson from 'convert-excel-to-json';
 
 @Injectable()
 export class WhatsappService {
@@ -373,11 +374,11 @@ export class WhatsappService {
                     this.maytApi.sendMessage(question.name, user.id);
                 } else {
                     // validate if the form has command response, this only apply if the form has a single question
-                    let responses = await this.connection.query('forms.ValidateFormResponses @0;', [request.id]);
+                    let responses = await this.connection.query('EXEC forms.ValidateFormResponses @0;', [request.id]);
 
                     if (responses && responses.length) {
                         let [response] = responses;
-                        let answers = await this.connection.query('forms.RetrieveFormResponse @0, @1, @2;', [response.name, request.id, session.id]);
+                        let answers = await this.connection.query('EXEC forms.RetrieveFormResponse @0, @1, @2;', [response.name, request.id, session.id]);
 
                         if (answers && answers.length) {
                             let [answer] = answers;
@@ -616,6 +617,45 @@ export class WhatsappService {
         }
 
         return message;
+    }
+
+    excelUpload(file: Express.Multer.File) {
+        let sheets = ExcelToJson({
+            source: file.buffer,
+            sheets: [
+                { name: 'Casillas2024', header: { rows: 1 } }
+            ]
+        });
+        let { Casillas2024: sheet } = sheets;
+        
+        if (Array.isArray(sheet)) {
+            sheet.map(async item => {
+                let response = await this.connection.query('EXEC forms.addBox @0, @1, @2, @3, @4, @5, @6, @7, @8, @9, @10, @11, @12, @13, @14, @15, @16, @17, @18, @19, @20', [
+                    item.A,
+                    item.B,
+                    item.C,
+                    item.D,
+                    item.E,
+                    item.F,
+                    item.G,
+                    item.H,
+                    item.I,
+                    item.J,
+                    item.K,
+                    item.L,
+                    item.M,
+                    item.O,
+                    item.N,
+                    item.P,
+                    item.Q,
+                    item.R,
+                    item.S,
+                    item.T,
+                    item.U
+                ]);
+                this.logger.log(response);
+            });
+        }
     }
 
 }
