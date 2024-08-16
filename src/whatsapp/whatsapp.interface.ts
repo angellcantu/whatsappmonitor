@@ -22,10 +22,10 @@ interface IMessage {
     vcardList?: Array<IVcardList>;
     subtype?: string;
     participant?: string;
-    id: string;
-    _serialized: string;
+    id?: string;
+    _serialized?: string;
     fromMe: boolean;
-    statuses: Array<IStatuses>;
+    statuses?: Array<IStatuses>;
 }
 
 /* user object */
@@ -34,6 +34,26 @@ interface IUser {
     name?: string;
     phone?: string;
 }
+
+/* data object / options */
+export interface IDataOptions {
+    name?: string;
+    id?: number;
+    votes?: number;
+}
+
+/* data object */
+interface IData {
+    msgId?: string;
+    chatId?: string;
+    time?: number;
+    options?: Array<IDataOptions>;
+    text?: string;
+    rxid?: string;
+}
+
+/* message type */
+type TMessage = 'message' | 'ack';
 
 /* main object */
 export interface IWebhook {
@@ -45,9 +65,10 @@ export interface IWebhook {
     conversation_name?: string;
     receiver?: string;
     timestamp?: string;
-    type?: string;
+    type?: TMessage;
     reply?: string;
     productId?: string;
     phoneId?: number;
     status?: string;
+    data?: Array<IData>;
 }
