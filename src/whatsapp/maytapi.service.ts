@@ -129,6 +129,31 @@ export class MaytApiService {
         return data;
     }
 
+    public async sendPoll(phone: string, message: string, options?: Array<string>) {
+        let body = {
+            to_number: phone,
+            type: 'poll',
+            message: message,
+            options: options,
+            only_one: true
+        };
+        let { data }: AxiosResponse = await firstValueFrom(
+            this.http.post(
+                `${this.config.get<string>('INSTANCE_URL')}/${this.config.get<string>('PRODUCT_ID')}/${this.config.get<string>('PHONE_ID')}/sendMessage`,
+                { ...body },
+                { headers: {
+                    'Content-Type': 'application/json',
+                    'x-maytapi-key': this.config.get<string>('API_TOKEN')
+                } }
+            ).pipe(
+                catchError((error: AxiosError) => {
+                    throw new HttpException(error.message, HttpStatus.CONFLICT);
+                })
+            )
+        );
+        return data;
+    }
+
     public async fetchImage(url: string) {
         let { data }: AxiosResponse = await firstValueFrom(
             this.http.get(url, { responseType: 'arraybuffer' }).pipe(

@@ -21,7 +21,7 @@ import { Message } from "src/message/message.entity";
 import { IMessage } from "src/message/message.interface";
 import { MaytApiService } from './maytapi.service';
 import { Connection } from 'typeorm';
-import { IWebhook } from './whatsapp.interface';
+import { IWebhook, IDataOptions } from './whatsapp.interface';
 import { FtpService } from './ftp.service';
 import * as ExcelToJson from 'convert-excel-to-json';
 
@@ -319,11 +319,29 @@ export class WhatsappService {
 
     // Private methods
     private async bot(body: IWebhook) {
-        let { message, user } = body;
+        let { message, user, type, data } = body,
+            userId: string = '';
 
-        if (message && !message.fromMe) {
+        if (['ack'].includes(type) && !message) {
+            let [item] = data;
+            if (!item.options) {
+                return { success: true };
+            }
+            body['message'] = {
+                fromMe: false,
+                type: 'poll'
+            };
+            return this.bot(body);
+        } else if (['ack'].includes(type) && message) {
+            let [item] = data;
+            userId = item?.chatId;
+        } else if (['message'].includes(type)) {
+            userId = user?.id;
+        }
+
+        if (message && !message?.fromMe) {
             // save the request
-            let [request] = await this.connection.query('EXEC forms.SaveRequests @0;', [user.id]);
+            let [request] = await this.connection.query('EXEC forms.SaveRequests @0;', [userId]);
 
             // create the internal session
             let [session] = await this.connection.query('EXEC forms.CreateSessionRequest @0;', [request.id]);
@@ -333,10 +351,10 @@ export class WhatsappService {
                 let [_default] = await this.connection.query('EXEC forms.ValidateCommand @0, @1, @2;', ['', 2, request.id]);
 
                 if (_default.name) {
-                    this.maytApi.sendMessage(`${_default.message}${_default.name}`, user.id);
+                    this.maytApi.sendMessage(`${_default.message}${_default.name}`, userId);
                 } else {
                     let [_default] = await this.connection.query('EXEC forms.ValidateCommand @0, @1;', ['', 3]);
-                    this.maytApi.sendMessage(`${_default.message}${_default.name}`, user.id);
+                    this.maytApi.sendMessage(`${_default.message}${_default.name}`, userId);
                 }
             } else if (!form_id && String(message?.text).match(new RegExp('/'))) {
                 let [command] = await this.connection.query('EXEC forms.ValidateCommand @0;', [String(message.text)]);
@@ -352,7 +370,12 @@ export class WhatsappService {
                     if (formSessionRequest) {
                         // we need to send the first message
                         let [question] = await this.connection.query('EXEC forms.SaveAnswerAndRetrieveNextQuestion @0, @1, @2;', [request.id, session.id, '']);
-                        this.maytApi.sendMessage(question.name, user.id);
+                        if (question.question_options) {
+                            let options: Array<string> = String(question.question_options).split(',');
+                            this.maytApi.sendPoll(userId, question.name, options);
+                        } else {
+                            this.maytApi.sendMessage(question.name, userId);
+                        }
                     }
                 } else {
                     body.message.text = 'Hi';
@@ -361,17 +384,32 @@ export class WhatsappService {
             } else {
                 let answer: string = '';
 
-                if (message?.type == 'location') {
-                    answer = message?.payload;
-                } else if (message.type == 'text') {
-                    answer = message?.text;
+                if (['ack'].includes(type)) {
+                    if (data && Array.isArray(data)) {
+                        let [_data] = data;
+                        if (_data.options) {
+                            let _answer: IDataOptions = _data?.options.find((item: IDataOptions) => item.votes == 1);
+                            answer = _answer?.name;
+                        }
+                    }
+                } else if (['message'].includes(type)) {
+                    if (['location'].includes(message?.type)) {
+                        answer = message?.payload;
+                    } else if (['text'].includes(message?.type)) {
+                        answer = message?.text;
+                    }
                 }
 
                 let questions = await this.connection.query('EXEC forms.SaveAnswerAndRetrieveNextQuestion @0, @1, @2;', [request.id, session.id, answer]);
                 
                 if (questions && questions.length) {
                     let [question] = questions;
-                    this.maytApi.sendMessage(question.name, user.id);
+                    if (question.question_options) {
+                        let options: Array<string> = String(question.question_options).split(',');
+                        this.maytApi.sendPoll(userId, question.name, options);
+                    } else {
+                        this.maytApi.sendMessage(question.name, userId);
+                    }
                 } else {
                     // validate if the form has command response, this only apply if the form has a single question
                     let responses = await this.connection.query('EXEC forms.ValidateFormResponses @0;', [request.id]);
@@ -384,11 +422,11 @@ export class WhatsappService {
                             let [answer] = answers;
 
                             // send the message
-                            await this.maytApi.sendMessage(answer.name, user.id);
+                            await this.maytApi.sendMessage(answer.name, userId);
                             
                             if (answer.latitude && answer.longitude) {
                                 // send here the location
-                                this.maytApi.sendLocation(answer.latitude, answer.longitude, user.id);
+                                this.maytApi.sendLocation(answer.latitude, answer.longitude, userId);
                             }
                         }
                     }
@@ -398,7 +436,7 @@ export class WhatsappService {
                     
                     if (_session) {
                         let [defaultCommand] = await this.connection.query('EXEC forms.ValidateCommand @0, @1;', ['', 1]);
-                        this.maytApi.sendMessage(defaultCommand.name, user.id);
+                        this.maytApi.sendMessage(defaultCommand.name, userId);
                     }
                 }
             }
