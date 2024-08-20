@@ -67,7 +67,7 @@ export class WebhookController {
             let [session] = await this.connection.query('EXEC forms.CreateSessionRequest @0;', [request.id]);
             let { form_id } = session;
 
-            if (!form_id && (message && !String(message.text).match(new RegExp('/')))) {
+            if (!form_id && (message && String(message.text).trim().toLowerCase().match(new RegExp('/menu')))) {
                 console.log('Invalid command');
                 let [_default] = await this.connection.query('EXEC forms.ValidateCommand @0, @1, @2;', ['', 2, request.id]);
                 
@@ -148,8 +148,12 @@ export class WebhookController {
                     let [_session] = await this.connection.query('EXEC forms.ClosedSessionRequest @0;', [request.id]);
                     
                     if (_session) {
-                        let [defaultCommand] = await this.connection.query('EXEC forms.ValidateCommand @0, @1;', ['', 1]);
-                        console.log(defaultCommand);
+                        let { form_id } = _session;
+                        
+                        if (form_id) {
+                            let [defaultCommand] = await this.connection.query('EXEC forms.ValidateCommand @0, @1;', ['', 1]);
+                            console.log(defaultCommand);
+                        }
                     }
                 }
             }

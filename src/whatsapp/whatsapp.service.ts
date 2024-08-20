@@ -347,7 +347,7 @@ export class WhatsappService {
             let [session] = await this.connection.query('EXEC forms.CreateSessionRequest @0;', [request.id]);
             let { form_id } = session;
 
-            if (!form_id && !String(message.text).match(new RegExp('/'))) {
+            if (!form_id && !String(message.text).match(new RegExp('/menu'))) {
                 let [_default] = await this.connection.query('EXEC forms.ValidateCommand @0, @1, @2;', ['', 2, request.id]);
 
                 if (_default.name) {
