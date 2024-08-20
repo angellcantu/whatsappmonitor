@@ -347,7 +347,7 @@ export class WhatsappService {
             let [session] = await this.connection.query('EXEC forms.CreateSessionRequest @0;', [request.id]);
             let { form_id } = session;
 
-            if (!form_id && !String(message.text).match(new RegExp('/menu'))) {
+            if (!form_id && String(message.text).trim().toLowerCase().match(new RegExp('/menu'))) {
                 let [_default] = await this.connection.query('EXEC forms.ValidateCommand @0, @1, @2;', ['', 2, request.id]);
 
                 if (_default.name) {
@@ -435,8 +435,12 @@ export class WhatsappService {
                     let [_session] = await this.connection.query('EXEC forms.ClosedSessionRequest @0;', [request.id]);
                     
                     if (_session) {
-                        let [defaultCommand] = await this.connection.query('EXEC forms.ValidateCommand @0, @1;', ['', 1]);
-                        this.maytApi.sendMessage(defaultCommand.name, userId);
+                        let { form_id } = _session;
+                        
+                        if (form_id) {
+                            let [defaultCommand] = await this.connection.query('EXEC forms.ValidateCommand @0, @1;', ['', 1]);
+                            this.maytApi.sendMessage(defaultCommand.name, userId);
+                        }
                     }
                 }
             }
