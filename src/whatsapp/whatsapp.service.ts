@@ -363,18 +363,29 @@ export class WhatsappService {
                     // get the form identifier by command identifier
                     let [form] = await this.connection.query('EXEC forms.GetFormIdentifierByCommandIdentifier @0;', [command.id]);
                     let { id } = form;
-    
-                    // updating the form in the session request
-                    let [formSessionRequest] = await this.connection.query('EXEC forms.UpdateFormToSessionRequest @0, @1;', [request.id, id]);
-    
-                    if (formSessionRequest) {
-                        // we need to send the first message
-                        let [question] = await this.connection.query('EXEC forms.SaveAnswerAndRetrieveNextQuestion @0, @1, @2;', [request.id, session.id, '']);
-                        if (question.question_options) {
-                            let options: Array<string> = String(question.question_options).split(',');
-                            this.maytApi.sendPoll(userId, question.name, options);
+
+                    // validate if the user already fill the form
+                    let validations = await this.connection.query('EXEC forms.ValidateIfFormIsFilled @0, @1;', [request.id, id]);
+
+                    if (validations.length) {
+                        let [validation] = validations;
+
+                        if (validation.is_filled > 0) {
+                            this.maytApi.sendMessage(validation.message, userId);
                         } else {
-                            this.maytApi.sendMessage(question.name, userId);
+                            // updating the form in the session request
+                            let [formSessionRequest] = await this.connection.query('EXEC forms.UpdateFormToSessionRequest @0, @1;', [request.id, id]);
+            
+                            if (formSessionRequest) {
+                                // we need to send the first message
+                                let [question] = await this.connection.query('EXEC forms.SaveAnswerAndRetrieveNextQuestion @0, @1, @2;', [request.id, session.id, '']);
+                                if (question.question_options) {
+                                    let options: Array<string> = String(question.question_options).split(',');
+                                    this.maytApi.sendPoll(userId, question.name, options);
+                                } else {
+                                    this.maytApi.sendMessage(question.name, userId);
+                                }
+                            }
                         }
                     }
                 } else {
