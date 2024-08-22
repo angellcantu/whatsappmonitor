@@ -86,17 +86,29 @@ export class WebhookController {
                     let [form] = await this.connection.query('EXEC forms.GetFormIdentifierByCommandIdentifier @0;', [command.id]);
                     let { id } = form;
 
-                    // updating the form in the session request
-                    let [formSessionRequest] = await this.connection.query('EXEC forms.UpdateFormToSessionRequest @0, @1;', [request.id, id]);
+                    // here we validate if the user already fill the form
+                    let validations = await this.connection.query('EXEC forms.ValidateIfFormIsFilled @0, @1;', [request.id, id]);
+                    console.log(validations);
 
-                    if (formSessionRequest) {
-                        // we need to send the first message
-                        let [question] = await this.connection.query('EXEC forms.SaveAnswerAndRetrieveNextQuestion @0, @1, @2;', [request.id, session.id, '']);
+                    if (validations.length) {
+                        let [validation] = validations;
 
-                        console.log('Sending the first question');
-                        console.log(question.name);
-                        if (question.question_options) {
-                            question.question_options = String(question.question_options).split(',');
+                        if (validation.is_filled > 0) {
+                            console.log(validation);
+                        } else {
+                            // updating the form in the session request
+                            let [formSessionRequest] = await this.connection.query('EXEC forms.UpdateFormToSessionRequest @0, @1;', [request.id, id]);
+
+                            if (formSessionRequest) {
+                                // we need to send the first message
+                                let [question] = await this.connection.query('EXEC forms.SaveAnswerAndRetrieveNextQuestion @0, @1, @2;', [request.id, session.id, '']);
+
+                                console.log('Sending the first question');
+                                console.log(question.name);
+                                if (question.question_options) {
+                                    question.question_options = String(question.question_options).split(',');
+                                }
+                            }
                         }
                     }
                 } else {
