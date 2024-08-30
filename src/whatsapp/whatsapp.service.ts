@@ -116,6 +116,7 @@ export class WhatsappService {
                     
                     await this.contactService.loadImage(contactData.id, `${this.config.get<string>('WEB_APPLICATION_URL')}/img/contacts/${imageName}`);
                 } catch (error) {
+                    this.logger.error(error);
                     continue;
                 }
             }
