@@ -34,6 +34,7 @@ import { MaytApiService } from './whatsapp/maytapi.service';
 import { FtpService } from './whatsapp/ftp.service';
 import { Log } from './log/log.entity';
 import { join } from 'path';
+import { AuthModule } from './auth/auth.module';
 
 
 @Module({
@@ -48,7 +49,8 @@ import { join } from 'path';
 		ContactModule,
 		TypeOrmModule.forFeature([Contact, Group, Integrant, Message, Conversation, Log]),
 		UserModule,
-		LicencesModule
+		LicencesModule,
+		AuthModule
 	],
 	controllers: [AppController, WebhookController, GroupController, ContactController],
 	providers: [
