@@ -55,7 +55,7 @@ interface IData {
 /* message type */
 type TMessage = 'message' | 'ack';
 
-/* main object */
+/* main whatsapp object */
 export interface IWebhook {
     product_id?: string;
     phone_id?: number;
@@ -71,4 +71,17 @@ export interface IWebhook {
     phoneId?: number;
     status?: string;
     data?: Array<IData>;
+}
+
+/* credentials response */
+export interface IPhoneCredentials {
+    id: number;
+    user_id?: number | null;
+    name: string;
+    description: string;
+    public_key: string;
+    private_key: string;
+    active: boolean | number;
+    created_at: Date;
+    updated_at: Date | null;
 }

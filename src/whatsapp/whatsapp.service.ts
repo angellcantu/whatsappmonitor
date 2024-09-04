@@ -2,6 +2,7 @@
 
 import { Logger, Injectable } from "@nestjs/common";
 import { ConfigService } from '@nestjs/config';
+import { Response } from 'express';
 import { PhoneService } from "src/phone/phone.service";
 import { Phone } from "src/phone/phone.entity";
 import { Contact } from "src/contact/contact.entity";
@@ -458,6 +459,164 @@ export class WhatsappService {
             }
         }
         return { success: true };
+    }
+
+    /**
+     * This function will work with the uat bot
+     * @param body maytapi object
+     * @returns object
+     */
+    async uatBot(body: IWebhook, response: Response) {
+        this.logger.log(response.locals);
+        let { message, user, type, data } = body,
+            userId: string = '';
+
+        if (['ack'].includes(type) && !message) {
+            let [item] = data;
+            if (!item.options) {
+                return { success: true };
+            }
+            body['message'] = {
+                fromMe: false,
+                type: 'poll'
+            };
+            return this.uatBot(body, response);
+        } else if (['ack'].includes(type) && message) {
+            let [item] = data;
+            userId = item?.chatId;
+        } else if (['message'].includes(type)) {
+            userId = user?.id;
+        }
+
+        this.logger.log(message);
+
+        if (message && !message?.fromMe) {
+            // save the request
+            let [request] = await this.connection.query('EXEC uat.SaveRequests @0;', [userId]);
+
+            // create the internal session
+            let [session] = await this.connection.query('EXEC uat.CreateSessionRequest @0;', [request.id]);
+            let { form_id } = session;
+
+            if (!form_id && String(message.text).trim().toLowerCase().match(new RegExp('/menu'))) {
+                let [_default] = await this.connection.query('EXEC uat.ValidateCommand @0, @1, @2;', ['', 2, request.id]);
+
+                this.logger.log(_default);
+                if (_default.name) {
+                    //this.maytApi.sendMessage(`${_default.message}${_default.name}`, userId);
+                } else {
+                    let [_default] = await this.connection.query('EXEC uat.ValidateCommand @0, @1;', ['', 3]);
+                    //this.maytApi.sendMessage(`${_default.message}${_default.name}`, userId);
+                }
+            } else if (!form_id && String(message?.text).match(new RegExp('/'))) {
+                let [command] = await this.connection.query('EXEC uat.ValidateCommand @0;', [String(message.text)]);
+    
+                this.logger.log(command);
+                if (command) {
+                    // get the form identifier by command identifier
+                    let [form] = await this.connection.query('EXEC uat.GetFormIdentifierByCommandIdentifier @0;', [command.id]);
+                    let { id } = form;
+
+                    // validate if the user already fill the form
+                    let validations = await this.connection.query('EXEC uat.ValidateIfFormIsFilled @0, @1;', [request.id, id]);
+                    this.logger.log(validations);
+
+                    if (validations.length) {
+                        let [validation] = validations;
+
+                        if (validation.is_filled > 0) {
+                            //this.maytApi.sendMessage(validation.message, userId);
+                        } else {
+                            // updating the form in the session request
+                            let [formSessionRequest] = await this.connection.query('EXEC uat.UpdateFormToSessionRequest @0, @1;', [request.id, id]);
+            
+                            if (formSessionRequest) {
+                                // we need to send the first message
+                                let [question] = await this.connection.query('EXEC uat.SaveAnswerAndRetrieveNextQuestion @0, @1, @2;', [request.id, session.id, '']);
+                                this.logger.log(question);
+                                if (question.question_options) {
+                                    let options: Array<string> = String(question.question_options).split(',');
+                                    //this.maytApi.sendPoll(userId, question.name, options);
+                                } else {
+                                   // this.maytApi.sendMessage(question.name, userId);
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    body.message.text = 'Hi';
+                    return this.uatBot(body, response);
+                }
+            } else {
+                let answer: string = '';
+
+                if (['ack'].includes(type)) {
+                    if (data && Array.isArray(data)) {
+                        let [_data] = data;
+                        if (_data.options) {
+                            let _answer: IDataOptions = _data?.options.find((item: IDataOptions) => item.votes == 1);
+                            answer = _answer?.name;
+                        }
+                    }
+                } else if (['message'].includes(type)) {
+                    if (['location'].includes(message?.type)) {
+                        answer = message?.payload;
+                    } else if (['text'].includes(message?.type)) {
+                        answer = message?.text;
+                    }
+                }
+
+                let questions = await this.connection.query('EXEC uat.SaveAnswerAndRetrieveNextQuestion @0, @1, @2;', [request.id, session.id, answer]);
+
+                this.logger.log(questions);
+                
+                if (questions && questions.length) {
+                    let [question] = questions;
+                    if (question.question_options) {
+                        let options: Array<string> = String(question.question_options).split(',');
+                        //this.maytApi.sendPoll(userId, question.name, options);
+                    } else {
+                        //this.maytApi.sendMessage(question.name, userId);
+                    }
+                } else {
+                    // validate if the form has command response, this only apply if the form has a single question
+                    let responses = await this.connection.query('EXEC uat.ValidateFormResponses @0;', [request.id]);
+
+                    this.logger.log(responses);
+
+                    if (responses && responses.length) {
+                        let [response] = responses;
+                        let answers = await this.connection.query('EXEC uat.RetrieveFormResponse @0, @1, @2;', [response.name, request.id, session.id]);
+
+                        if (answers && answers.length) {
+                            let [answer] = answers;
+
+                            // send the message
+                            //await this.maytApi.sendMessage(answer.name, userId);
+                            
+                            if (answer.latitude && answer.longitude) {
+                                // send here the location
+                                //this.maytApi.sendLocation(answer.latitude, answer.longitude, userId);
+                            }
+                        }
+                    }
+
+                    // close the internal session
+                    let [_session] = await this.connection.query('EXEC uat.ClosedSessionRequest @0;', [request.id]);
+                    this.logger.log(_session);
+                    
+                    if (_session) {
+                        let { form_id } = _session;
+                        
+                        if (form_id) {
+                            let [defaultCommand] = await this.connection.query('EXEC uat.ValidateCommand @0, @1;', ['', 1]);
+                            this.logger.log(defaultCommand);
+                            //this.maytApi.sendMessage(defaultCommand.name, userId);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private async createGroupFromAPI(phone_id: string, group_id: string, contact: Contact): Promise<Group | undefined> {
