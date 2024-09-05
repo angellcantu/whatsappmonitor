@@ -17,10 +17,10 @@ export class UatBotMiddleware implements NestMiddleware {
      * @param next function to continue with the process
      */
     async use(request: Request, response: Response, next: NextFunction) {
-        let { product_id }: IWebhook = request?.body;
+        let { product_id, phone_id }: IWebhook = request?.body;
         
         if (product_id) {
-            let credentials: Array<IPhoneCredentials> = await this.connection.query('EXEC uat.PhoneCredentials @0;', [product_id]);
+            let credentials: Array<IPhoneCredentials> = await this.connection.query('EXEC uat.PhoneCredentials @0, @1;', [product_id, phone_id]);
             
             if (credentials.length) {
                 let keys: IPhoneCredentials = credentials[0];

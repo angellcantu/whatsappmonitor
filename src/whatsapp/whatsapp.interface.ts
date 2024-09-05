@@ -77,11 +77,12 @@ export interface IWebhook {
 export interface IPhoneCredentials {
     id: number;
     user_id?: number | null;
-    name: string;
-    description: string;
+    name?: string;
+    description?: string;
     public_key: string;
     private_key: string;
-    active: boolean | number;
-    created_at: Date;
-    updated_at: Date | null;
+    active?: boolean | number;
+    created_at?: Date;
+    updated_at?: Date | null;
+    phone_id: number;
 }

@@ -5,7 +5,6 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { WhatsappService } from "src/whatsapp/whatsapp.service";
 import { Connection } from 'typeorm';
 import { IWebhook, IDataOptions } from '../whatsapp/whatsapp.interface';
-import { Response } from 'express';
 
 @Controller('webhook')
 export class WebhookController {
@@ -24,9 +23,9 @@ export class WebhookController {
     }
 
     @Post('/uat')
-    uatBot(@Body() body: any, @Res() response: Response) {
-        this.whatsappService.uatBot(body, response);
-        return response.json({ success: true });
+    uatBot(@Body() body: any) {
+        this.whatsappService.uatBot(body);
+        return { success: true };
     }
 
     @Get()

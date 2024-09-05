@@ -35,7 +35,6 @@ import { FtpService } from './whatsapp/ftp.service';
 import { Log } from './log/log.entity';
 import { join } from 'path';
 import { AuthModule } from './auth/auth.module';
-import { UatBotMiddleware } from './middlewares/uatbot.middleware';
 
 
 @Module({
@@ -71,18 +70,4 @@ import { UatBotMiddleware } from './middlewares/uatbot.middleware';
 		FtpService
 	],
 })
-export class AppModule implements NestModule {
-	
-	configure(consumer: MiddlewareConsumer) {
-		consumer
-			.apply(UatBotMiddleware)
-			.exclude(
-				{ path: '/', method: RequestMethod.POST },
-				{ path: '/', method: RequestMethod.GET },
-				{ path: '/test', method: RequestMethod.POST },
-				{ path: '/excel', method: RequestMethod.POST }
-			)
-			.forRoutes(WebhookController);
-	}
-
-}
+export class AppModule { };
