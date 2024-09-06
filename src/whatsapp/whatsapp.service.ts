@@ -2,6 +2,7 @@
 
 import { Logger, Injectable } from "@nestjs/common";
 import { ConfigService } from '@nestjs/config';
+import { Response } from 'express';
 import { PhoneService } from "src/phone/phone.service";
 import { Phone } from "src/phone/phone.entity";
 import { Contact } from "src/contact/contact.entity";
@@ -89,35 +90,39 @@ export class WhatsappService {
         this.logger.log('Loading the images contacts');
 
         try {
-            const contacts: Array<Contact> = await this.contactService.findAll();
+            const phoneIds: Array<string> = await this.phoneService.findAllPhoneIds();
 
-            for (const contact of contacts) {
-                try {
-                    const contactInfo: any = await this.maytApi.getContactInformation(String(contact.contact_id));
-                    this.logger.log(contactInfo);
-                    
-                    if (!contactInfo.success || !contactInfo.data.length) {
+            for (const id of phoneIds) {
+                const contacts: Array<Contact> = await this.contactService.findAll();
+
+                for (const contact of contacts) {
+                    try {
+                        const contactInfo: any = await this.maytApi.getContactInformation(String(contact.contact_id), Number(id));
+                        this.logger.log(contactInfo);
+
+                        if (!contactInfo.success || !contactInfo.data.length) {
+                            continue;
+                        }
+
+                        const contactData = contactInfo.data[0];
+                        var image: string = contactData.image.url;
+
+                        if (image === '' || image === undefined) {
+                            continue;
+                        }
+
+                        // here we will save the image in the server
+                        let imageName: string = `${contact.id}.jpeg`;
+                        let file = await this.maytApi.fetchImage(image);
+                        this.ftp.saveLocalFile(file, { name: imageName });
+                        await this.ftp.upload(`../../files/${imageName}`, `/img/contacts/${imageName}`);
+                        this.ftp.removeFile(`../../files/${imageName}`);
+
+                        await this.contactService.loadImage(contactData.id, `${this.config.get<string>('WEB_APPLICATION_URL')}/img/contacts/${imageName}`);
+                    } catch (error) {
+                        this.logger.error(error);
                         continue;
                     }
-                    
-                    const contactData = contactInfo.data[0];
-                    var image: string = contactData.image.url;
-                    
-                    if (image === '' || image === undefined) {
-                        continue;
-                    }
-
-                    // here we will save the image in the server
-                    let imageName: string = `${contact.id}.jpeg`;
-                    let file = await this.maytApi.fetchImage(image);
-                    this.ftp.saveLocalFile(file, { name: imageName });
-                    await this.ftp.upload(`../../files/${imageName}`, `/img/contacts/${imageName}`);
-                    this.ftp.removeFile(`../../files/${imageName}`);
-                    
-                    await this.contactService.loadImage(contactData.id, `${this.config.get<string>('WEB_APPLICATION_URL')}/img/contacts/${imageName}`);
-                } catch (error) {
-                    this.logger.error(error);
-                    continue;
                 }
             }
 
@@ -131,30 +136,34 @@ export class WhatsappService {
         this.logger.log('Loading the images for each group');
 
         try {
-            const groups: Array<Group> = await this.groupService.findAllGroups();
-            
-            for (const group of groups) {
-                const groupData: any = await this.maytApi.getGroupInformation(group.id_group);
-                this.logger.log(groupData);
-                
-                if (!groupData.success || !groupData.data) {
-                    continue;
+            const phoneIds: Array<string> = await this.phoneService.findAllPhoneIds();
+
+            for (const id of phoneIds) {
+                const groups: Array<Group> = await this.groupService.findAllGroups();
+
+                for (const group of groups) {
+                    const groupData: any = await this.maytApi.getGroupInformation(group.id_group, Number(id));
+                    this.logger.log(groupData);
+
+                    if (!groupData.success || !groupData.data) {
+                        continue;
+                    }
+
+                    let image: string = groupData?.data?.image;
+
+                    if (image === '' || image == null) {
+                        continue;
+                    }
+
+                    // here we will save the image in the server
+                    let imageName: string = `${group.id}.jpeg`;
+                    let file = await this.maytApi.fetchImage(image);
+                    this.ftp.saveLocalFile(file, { name: imageName });
+                    await this.ftp.upload(`../../files/${imageName}`, `/img/groups/${imageName}`);
+                    this.ftp.removeFile(`../../files/${imageName}`);
+
+                    await this.groupService.loadImage(group.id, `${this.config.get<string>('WEB_APPLICATION_URL')}/img/groups/${imageName}`);
                 }
-
-                let image: string = groupData?.data?.image;
-                
-                if (image === '' || image == null) {
-                    continue;
-                }
-
-                // here we will save the image in the server
-                let imageName: string = `${group.id}.jpeg`;
-                let file = await this.maytApi.fetchImage(image);
-                this.ftp.saveLocalFile(file, { name: imageName });
-                await this.ftp.upload(`../../files/${imageName}`, `/img/groups/${imageName}`);
-                this.ftp.removeFile(`../../files/${imageName}`);
-
-                await this.groupService.loadImage(group.id, `${this.config.get<string>('WEB_APPLICATION_URL')}/img/groups/${imageName}`);
             }
 
             this.logger.log('Finished the process to load the groups images');
@@ -188,55 +197,59 @@ export class WhatsappService {
     async loadGroupConversations(): Promise<void> {
         this.logger.log('Getting the conversations');
 
-        const groupIds: string[] = ((await this.contactService.getGroupsId()));
-        
-        for (const contact_id of groupIds) {
-            let conversationInfo: any;
-            
-            try {
-                conversationInfo = await this.maytApi.getConversation(contact_id);
-            } catch (error) {
-                this.logger.log('No se pudo traer la info de la conversacion');
-                this.logger.error(error);
-            }
+        const phoneIds: Array<string> = await this.phoneService.findAllPhoneIds();
 
-            try {
-                if (!conversationInfo.success || conversationInfo.data.length <= 0) {
-                    const conversation: Conversation = new Conversation();
-                    conversation.id_conversation = contact_id;
+        for (const id of phoneIds) {
+            const groupIds: string[] = ((await this.contactService.getGroupsId()));
 
-                    await this.conversationService.createConversation(conversation);
-                    return;
+            for (const contact_id of groupIds) {
+                let conversationInfo: any;
+
+                try {
+                    conversationInfo = await this.maytApi.getConversation(contact_id, Number(id));
+                } catch (error) {
+                    this.logger.log('No se pudo traer la info de la conversacion');
+                    this.logger.error(error);
                 }
 
-                const conversationData: any = conversationInfo.data;
-                const _messages: Message[] = [];
-                
-                if (conversationData.messages.length > 0) {
-                    for (const message of conversationData.messages) {
-                        if (await this.validateMessageType(message)) { continue; }
+                try {
+                    if (!conversationInfo.success || conversationInfo.data.length <= 0) {
+                        const conversation: Conversation = new Conversation();
+                        conversation.id_conversation = contact_id;
 
-                        const newMessage: IMessage = await this.messageAttributes(message)
-                        _messages.push(await this.messageService.createMessage(newMessage));
+                        await this.conversationService.createConversation(conversation);
+                        return;
                     }
-                }
 
-                const Iconversation: IConversation = {
-                    id_conversation: contact_id,
-                    messages: _messages
-                }
+                    const conversationData: any = conversationInfo.data;
+                    const _messages: Message[] = [];
 
-                const conversation: Conversation = await this.conversationService.createConversation(Iconversation);
+                    if (conversationData.messages.length > 0) {
+                        for (const message of conversationData.messages) {
+                            if (await this.validateMessageType(message)) { continue; }
 
-                if (conversationData.participants.length > 0) {
-                    for (const participant of conversationData.participants) {
-                        const contact: Contact = await this.contactService.findOne(participant.id);
-                        contact.conversations = [conversation];
-                        await this.contactService.saveConversationInContact(contact);
+                            const newMessage: IMessage = await this.messageAttributes(message)
+                            _messages.push(await this.messageService.createMessage(newMessage));
+                        }
                     }
+
+                    const Iconversation: IConversation = {
+                        id_conversation: contact_id,
+                        messages: _messages
+                    }
+
+                    const conversation: Conversation = await this.conversationService.createConversation(Iconversation);
+
+                    if (conversationData.participants.length > 0) {
+                        for (const participant of conversationData.participants) {
+                            const contact: Contact = await this.contactService.findOne(participant.id);
+                            contact.conversations = [conversation];
+                            await this.contactService.saveConversationInContact(contact);
+                        }
+                    }
+                } catch (error) {
+                    this.logger.error(error);
                 }
-            } catch (error) {
-                this.logger.error(error);
             }
         }
 
@@ -248,7 +261,7 @@ export class WhatsappService {
 
         if (String(response?.user?.id).length > 18) {
             await this.phoneService.findPhone(phone_id);
-            
+
             var newConversation: string = response?.conversation;
             const contact: Contact = await this.contactService.findOne(newConversation);
 
@@ -257,7 +270,7 @@ export class WhatsappService {
 
                 if (conversation) {
                     const group: Group = await this.groupService.findGroup(newConversation);
-                    
+
                     if (group) {
                         if (await this.validateMessageType(response)) {
                             return;
@@ -268,7 +281,7 @@ export class WhatsappService {
                             return;
                         }
                         const newMessage = await this.messageService.createMessage(interfaceMessage);
-                        
+
                         await this.messageService.saveContactInMessage(newMessage, newMessage.contact, conversation);
                     } else {
                         await this.createGroupFromAPI(String(phone_id), newConversation, contact);
@@ -283,16 +296,16 @@ export class WhatsappService {
                     conversation.id_conversation = newConversation;
                     conversation.contacts = [contact];
                     await this.conversationService.createConversation(conversation);
-                    
+
                     const group: Group = await this.groupService.findGroup(newConversation);
-                    
+
                     if (group) {
                         const interfaceMessage: IMessage = await this.assignAttributesInMessages(response);
-        
+
                         if (interfaceMessage.uuid == null || interfaceMessage.uuid === "") { return; }
-        
+
                         const newMessage = await this.messageService.createMessage(interfaceMessage);
-        
+
                         await this.messageService.saveContactInMessage(newMessage, newMessage.contact, conversation);
                     } else {
                         await this.createGroupFromAPI(String(phone_id), newConversation, contact);
@@ -312,7 +325,7 @@ export class WhatsappService {
                 }
             }
         }
-        
+
         if (String(response?.user?.id).length <= 18) {
             return this.bot(response);
         }
@@ -320,7 +333,7 @@ export class WhatsappService {
 
     // Private methods
     private async bot(body: IWebhook) {
-        let { message, user, type, data } = body,
+        let { message, user, type, data, phone_id } = body,
             userId: string = '';
 
         if (['ack'].includes(type) && !message) {
@@ -352,14 +365,14 @@ export class WhatsappService {
                 let [_default] = await this.connection.query('EXEC forms.ValidateCommand @0, @1, @2;', ['', 2, request.id]);
 
                 if (_default.name) {
-                    this.maytApi.sendMessage(`${_default.message}${_default.name}`, userId);
+                    this.maytApi.sendMessage(`${_default.message}${_default.name}`, userId, phone_id);
                 } else {
                     let [_default] = await this.connection.query('EXEC forms.ValidateCommand @0, @1;', ['', 3]);
-                    this.maytApi.sendMessage(`${_default.message}${_default.name}`, userId);
+                    this.maytApi.sendMessage(`${_default.message}${_default.name}`, userId, phone_id);
                 }
             } else if (!form_id && String(message?.text).match(new RegExp('/'))) {
                 let [command] = await this.connection.query('EXEC forms.ValidateCommand @0;', [String(message.text)]);
-    
+
                 if (command) {
                     // get the form identifier by command identifier
                     let [form] = await this.connection.query('EXEC forms.GetFormIdentifierByCommandIdentifier @0;', [command.id]);
@@ -372,19 +385,24 @@ export class WhatsappService {
                         let [validation] = validations;
 
                         if (validation.is_filled > 0) {
-                            this.maytApi.sendMessage(validation.message, userId);
+                            this.maytApi.sendMessage(validation.message, userId, phone_id);
                         } else {
                             // updating the form in the session request
                             let [formSessionRequest] = await this.connection.query('EXEC forms.UpdateFormToSessionRequest @0, @1;', [request.id, id]);
-            
+
                             if (formSessionRequest) {
                                 // we need to send the first message
                                 let [question] = await this.connection.query('EXEC forms.SaveAnswerAndRetrieveNextQuestion @0, @1, @2;', [request.id, session.id, '']);
                                 if (question.question_options) {
                                     let options: Array<string> = String(question.question_options).split(',');
-                                    this.maytApi.sendPoll(userId, question.name, options);
+                                    this.maytApi.sendPoll({
+                                        phone: userId,
+                                        message: question.name,
+                                        options: options,
+                                        phone_id: phone_id
+                                    });
                                 } else {
-                                    this.maytApi.sendMessage(question.name, userId);
+                                    this.maytApi.sendMessage(question.name, userId, phone_id);
                                 }
                             }
                         }
@@ -413,14 +431,19 @@ export class WhatsappService {
                 }
 
                 let questions = await this.connection.query('EXEC forms.SaveAnswerAndRetrieveNextQuestion @0, @1, @2;', [request.id, session.id, answer]);
-                
+
                 if (questions && questions.length) {
                     let [question] = questions;
                     if (question.question_options) {
                         let options: Array<string> = String(question.question_options).split(',');
-                        this.maytApi.sendPoll(userId, question.name, options);
+                        this.maytApi.sendPoll({
+                            phone: userId,
+                            message: question.name,
+                            options: options,
+                            phone_id: phone_id
+                        });
                     } else {
-                        this.maytApi.sendMessage(question.name, userId);
+                        this.maytApi.sendMessage(question.name, userId, phone_id);
                     }
                 } else {
                     // validate if the form has command response, this only apply if the form has a single question
@@ -434,35 +457,200 @@ export class WhatsappService {
                             let [answer] = answers;
 
                             // send the message
-                            await this.maytApi.sendMessage(answer.name, userId);
-                            
+                            await this.maytApi.sendMessage(answer.name, userId, phone_id);
+
                             if (answer.latitude && answer.longitude) {
                                 // send here the location
-                                this.maytApi.sendLocation(answer.latitude, answer.longitude, userId);
+                                this.maytApi.sendLocation({
+                                    latitude: answer.latitude,
+                                    longitude: answer.longitude,
+                                    phone: userId,
+                                    phone_id: phone_id
+                                });
                             }
                         }
                     }
 
                     // close the internal session
                     let [_session] = await this.connection.query('EXEC forms.ClosedSessionRequest @0;', [request.id]);
-                    
+
                     if (_session) {
                         let { form_id } = _session;
-                        
+
                         if (form_id) {
                             let [defaultCommand] = await this.connection.query('EXEC forms.ValidateCommand @0, @1;', ['', 1]);
-                            this.maytApi.sendMessage(defaultCommand.name, userId);
+                            this.maytApi.sendMessage(defaultCommand.name, userId, phone_id);
                         }
                     }
                 }
             }
         }
-        return { success: true };
+    }
+
+    /**
+     * This function will work with the uat bot
+     * @param body maytapi object
+     * @returns object
+     */
+    async uatBot(body: IWebhook) {
+        let { message, user, type, data, phone_id } = body,
+            userId: string = '';
+
+        if (['ack'].includes(type) && !message) {
+            let [item] = data;
+            if (!item.options) {
+                return { success: true };
+            }
+            body['message'] = {
+                fromMe: false,
+                type: 'poll'
+            };
+            return this.uatBot(body);
+        } else if (['ack'].includes(type) && message) {
+            let [item] = data;
+            userId = item?.chatId;
+        } else if (['message'].includes(type)) {
+            userId = user?.id;
+        }
+
+        if (message && !message?.fromMe) {
+            // save the request
+            let [request] = await this.connection.query('EXEC uat.SaveRequests @0;', [userId]);
+
+            // create the internal session
+            let [session] = await this.connection.query('EXEC uat.CreateSessionRequest @0;', [request.id]);
+            let { form_id } = session;
+
+            if (!form_id && String(message.text).trim().toLowerCase().match(new RegExp('/menu'))) {
+                let [_default] = await this.connection.query('EXEC uat.ValidateCommand @0, @1, @2;', ['', 2, request.id]);
+
+                if (_default.name) {
+                    this.maytApi.sendMessage(`${_default.message}${_default.name}`, userId, phone_id);
+                } else {
+                    let [_default] = await this.connection.query('EXEC uat.ValidateCommand @0, @1;', ['', 3]);
+                    this.maytApi.sendMessage(`${_default.message}${_default.name}`, userId, phone_id);
+                }
+            } else if (!form_id && String(message?.text).match(new RegExp('/'))) {
+                let [command] = await this.connection.query('EXEC uat.ValidateCommand @0;', [String(message.text)]);
+
+                if (command) {
+                    // get the form identifier by command identifier
+                    let [form] = await this.connection.query('EXEC uat.GetFormIdentifierByCommandIdentifier @0;', [command.id]);
+                    let { id } = form;
+
+                    // validate if the user already fill the form
+                    let validations = await this.connection.query('EXEC uat.ValidateIfFormIsFilled @0, @1;', [request.id, id]);
+
+                    if (validations.length) {
+                        let [validation] = validations;
+
+                        if (validation.is_filled > 0) {
+                            this.maytApi.sendMessage(validation.message, userId, phone_id);
+                        } else {
+                            // updating the form in the session request
+                            let [formSessionRequest] = await this.connection.query('EXEC uat.UpdateFormToSessionRequest @0, @1;', [request.id, id]);
+
+                            if (formSessionRequest) {
+                                // we need to send the first message
+                                let [question] = await this.connection.query('EXEC uat.SaveAnswerAndRetrieveNextQuestion @0, @1, @2;', [request.id, session.id, '']);
+                                
+                                if (question.question_options) {
+                                    let options: Array<string> = String(question.question_options).split(',');
+                                    this.maytApi.sendPoll({
+                                        phone: userId,
+                                        message: question.name,
+                                        options: options,
+                                        phone_id: phone_id
+                                    });
+                                } else {
+                                    this.maytApi.sendMessage(question.name, userId, phone_id);
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    body.message.text = 'Hi';
+                    return this.uatBot(body);
+                }
+            } else {
+                let answer: string = '';
+
+                if (['ack'].includes(type)) {
+                    if (data && Array.isArray(data)) {
+                        let [_data] = data;
+                        if (_data.options) {
+                            let _answer: IDataOptions = _data?.options.find((item: IDataOptions) => item.votes == 1);
+                            answer = _answer?.name;
+                        }
+                    }
+                } else if (['message'].includes(type)) {
+                    if (['location'].includes(message?.type)) {
+                        answer = message?.payload;
+                    } else if (['text'].includes(message?.type)) {
+                        answer = message?.text;
+                    }
+                }
+
+                let questions = await this.connection.query('EXEC uat.SaveAnswerAndRetrieveNextQuestion @0, @1, @2;', [request.id, session.id, answer]);
+
+                if (questions && questions.length) {
+                    let [question] = questions;
+                    if (question.question_options) {
+                        let options: Array<string> = String(question.question_options).split(',');
+                        this.maytApi.sendPoll({
+                            phone: userId,
+                            message: question.name,
+                            options: options,
+                            phone_id: phone_id
+                        });
+                    } else {
+                        this.maytApi.sendMessage(question.name, userId, phone_id);
+                    }
+                } else {
+                    // validate if the form has command response, this only apply if the form has a single question
+                    let responses = await this.connection.query('EXEC uat.ValidateFormResponses @0;', [request.id]);
+
+                    if (responses && responses.length) {
+                        let [response] = responses;
+                        let answers = await this.connection.query('EXEC uat.RetrieveFormResponse @0, @1, @2;', [response.name, request.id, session.id]);
+
+                        if (answers && answers.length) {
+                            let [answer] = answers;
+
+                            // send the message
+                            await this.maytApi.sendMessage(answer.name, userId, phone_id);
+
+                            if (answer.latitude && answer.longitude) {
+                                // send here the location
+                                this.maytApi.sendLocation({
+                                    latitude: answer.latitude,
+                                    longitude: answer.longitude,
+                                    phone: userId,
+                                    phone_id: phone_id
+                                });
+                            }
+                        }
+                    }
+
+                    // close the internal session
+                    let [_session] = await this.connection.query('EXEC uat.ClosedSessionRequest @0;', [request.id]);
+
+                    if (_session) {
+                        let { form_id } = _session;
+
+                        if (form_id) {
+                            let [defaultCommand] = await this.connection.query('EXEC uat.ValidateCommand @0, @1;', ['', 1]);
+                            this.maytApi.sendMessage(defaultCommand.name, userId, phone_id);
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private async createGroupFromAPI(phone_id: string, group_id: string, contact: Contact): Promise<Group | undefined> {
         try {
-            const groupRes: any = await this.maytApi.getGroupInformation(group_id);
+            const groupRes: any = await this.maytApi.getGroupInformation(group_id, Number(phone_id));
             const resGroupInfo: any = groupRes?.data;
 
             if (!groupRes.success || groupRes.data <= 0) { return; }
@@ -681,7 +869,7 @@ export class WhatsappService {
             ]
         });
         let { Casillas2024: sheet } = sheets;
-        
+
         if (Array.isArray(sheet)) {
             sheet.map(async item => {
                 let response = await this.connection.query('EXEC forms.addBox @0, @1, @2, @3, @4, @5, @6, @7, @8, @9, @10, @11, @12, @13, @14, @15, @16, @17, @18, @19, @20', [

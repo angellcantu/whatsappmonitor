@@ -14,7 +14,7 @@ export class MaytApiService {
         private readonly config: ConfigService
     ) { }
 
-    public async sendMessage(message: string, phone: string) {
+    public async sendMessage(message: string, phone: string, phone_id?: number) {
         let body = {
             message: message,
             type: 'text',
@@ -22,7 +22,7 @@ export class MaytApiService {
         };
         let { data }: AxiosResponse = await firstValueFrom(
             this.http.post(
-                `${this.config.get<string>('INSTANCE_URL')}/${this.config.get<string>('PRODUCT_ID')}/${this.config.get<string>('PHONE_ID')}/sendMessage`,
+                `${this.config.get<string>('INSTANCE_URL')}/${this.config.get<string>('PRODUCT_ID')}/${phone_id ? phone_id : this.config.get<string>('PHONE_ID')}/sendMessage`,
                 { ...body },
                 { headers: {
                     'Content-Type': 'application/json',
@@ -37,16 +37,16 @@ export class MaytApiService {
         return data;
     }
 
-    public async sendLocation(latitude: string, longitude: string, phone: string) {
+    public async sendLocation(params: { latitude: string, longitude: string, phone: string, phone_id?: number }) {
         let body = {
             type: 'location',
-            latitude: latitude,
-            longitude: longitude,
-            to_number: phone
+            latitude: params.latitude,
+            longitude: params.longitude,
+            to_number: params.phone
         };
         let { data }: AxiosResponse = await firstValueFrom(
             this.http.post(
-                `${this.config.get<string>('INSTANCE_URL')}/${this.config.get<string>('PRODUCT_ID')}/${this.config.get<string>('PHONE_ID')}/sendMessage`,
+                `${this.config.get<string>('INSTANCE_URL')}/${this.config.get<string>('PRODUCT_ID')}/${params?.phone_id ? params?.phone_id : this.config.get<string>('PHONE_ID')}/sendMessage`,
                 { ...body },
                 { headers: {
                     'Content-Type': 'application/json',
@@ -78,10 +78,10 @@ export class MaytApiService {
         return data;
     }
 
-    public async getContactInformation(id: string) {
+    public async getContactInformation(id: string, phone_id?: number) {
         let { data }: AxiosResponse = await firstValueFrom(
             this.http.get(
-                `${this.config.get<string>('INSTANCE_URL')}/${this.config.get<string>('PRODUCT_ID')}/${this.config.get<string>('PHONE_ID')}/contact/${id}`,
+                `${this.config.get<string>('INSTANCE_URL')}/${this.config.get<string>('PRODUCT_ID')}/${phone_id ? phone_id : this.config.get<string>('PHONE_ID')}/contact/${id}`,
                 { headers: {
                     'Content-Type': 'application/json',
                     'x-maytapi-key': this.config.get<string>('API_TOKEN')
@@ -95,10 +95,10 @@ export class MaytApiService {
         return data;
     }
 
-    public async getGroupInformation(id: string) {
+    public async getGroupInformation(id: string, phone_id?: number) {
         let { data }: AxiosResponse = await firstValueFrom(
             this.http.get(
-                `${this.config.get<string>('INSTANCE_URL')}/${this.config.get<string>('PRODUCT_ID')}/${this.config.get<string>('PHONE_ID')}/getGroups/${id}`,
+                `${this.config.get<string>('INSTANCE_URL')}/${this.config.get<string>('PRODUCT_ID')}/${phone_id ? phone_id : this.config.get<string>('PHONE_ID')}/getGroups/${id}`,
                 { headers: {
                     'Content-Type': 'application/json',
                     'x-maytapi-key': this.config.get<string>('API_TOKEN')
@@ -112,10 +112,10 @@ export class MaytApiService {
         return data;
     }
 
-    public async getConversation(id: string) {
+    public async getConversation(id: string, phone_id?: number) {
         let { data }: AxiosResponse = await firstValueFrom(
             this.http.get(
-                `${this.config.get<string>('INSTANCE_URL')}/${this.config.get<string>('PRODUCT_ID')}/${this.config.get<string>('PHONE_ID')}/getConversations/${id}`,
+                `${this.config.get<string>('INSTANCE_URL')}/${this.config.get<string>('PRODUCT_ID')}/${phone_id ? phone_id : this.config.get<string>('PHONE_ID')}/getConversations/${id}`,
                 { headers: {
                     'Content-Type': 'application/json',
                     'x-maytapi-key': this.config.get<string>('API_TOKEN')
@@ -129,17 +129,17 @@ export class MaytApiService {
         return data;
     }
 
-    public async sendPoll(phone: string, message: string, options?: Array<string>) {
+    public async sendPoll(params: { phone: string, message: string, options?: Array<string>, phone_id?: number }) {
         let body = {
-            to_number: phone,
+            to_number: params.phone,
             type: 'poll',
-            message: message,
-            options: options,
+            message: params.message,
+            options: params?.options || [],
             only_one: true
         };
         let { data }: AxiosResponse = await firstValueFrom(
             this.http.post(
-                `${this.config.get<string>('INSTANCE_URL')}/${this.config.get<string>('PRODUCT_ID')}/${this.config.get<string>('PHONE_ID')}/sendMessage`,
+                `${this.config.get<string>('INSTANCE_URL')}/${this.config.get<string>('PRODUCT_ID')}/${params?.phone_id ? params?.phone_id : this.config.get<string>('PHONE_ID')}/sendMessage`,
                 { ...body },
                 { headers: {
                     'Content-Type': 'application/json',

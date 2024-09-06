@@ -2,7 +2,7 @@
 
 import { Contact } from 'src/contact/contact.entity';
 import { Licences } from 'src/licences/licences.entity';
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, JoinColumn, OneToMany, UpdateDateColumn, OneToOne } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, JoinColumn, OneToMany, UpdateDateColumn, ManyToOne } from 'typeorm';
 
 @Entity()
 export class Phone {
@@ -46,7 +46,7 @@ export class Phone {
     @JoinColumn()
     contacts: Contact[]
 
-    @OneToOne(() => Licences, licence => licence.id)
+    @ManyToOne(() => Licences, licence => licence.id)
     @JoinColumn()
     licences: Licences
 

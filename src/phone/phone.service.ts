@@ -2,12 +2,13 @@
 
 import { Injectable, HttpException, HttpStatus } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository, SelectQueryBuilder } from "typeorm";
+import { Repository } from "typeorm";
 import { Phone } from './phone.entity'
-import { CreatePhoneDto } from './phone.dto';
+import { CreatePhoneDto, UpdatePhoneDto } from './phone.dto';
 
 @Injectable()
 export class PhoneService {
+
     constructor(
         @InjectRepository(Phone)
         private phoneRepository: Repository<Phone>
@@ -33,6 +34,23 @@ export class PhoneService {
             let record = this.phoneRepository.create(phone);
             await this.phoneRepository.save(record);
             return record;
+        } catch (error) {
+            throw new HttpException(error.toString(), HttpStatus.CONFLICT);
+        }
+    }
+
+    /**
+     * This function will update the phone information
+     * @param id phone identifier
+     * @param phone object with the phone body
+     * @returns new phone object updated
+     */
+    async update(id: number, phone: UpdatePhoneDto): Promise<Phone | undefined> {
+        try {
+            await this.findPhoneById(id);
+            phone.updated_at = new Date();
+            await this.phoneRepository.update(id, phone);
+            return await this.findPhoneById(id);
         } catch (error) {
             throw new HttpException(error.toString(), HttpStatus.CONFLICT);
         }
