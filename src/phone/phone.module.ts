@@ -1,12 +1,13 @@
 'use strict';
 
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PhoneController } from './phone.controller';
 import { Phone } from './phone.entity';
 import { Licences } from '../licences/licences.entity';
 import { PhoneService } from './phone.service';
 import { LicencesService } from '../licences/licences.service';
+import { AuthMiddleware } from '../middlewares/auth.middleware';
 
 @Module({
     imports: [TypeOrmModule.forFeature([Phone, Licences])],
@@ -14,4 +15,12 @@ import { LicencesService } from '../licences/licences.service';
     providers: [PhoneService, LicencesService],
     exports: [PhoneService]
 })
-export class PhoneModule { }
+export class PhoneModule implements NestModule {
+    
+    configure(consumer: MiddlewareConsumer) {
+        consumer
+            .apply(AuthMiddleware)
+            .forRoutes(PhoneController);
+    }
+
+}

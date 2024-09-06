@@ -1,11 +1,10 @@
 'use strict';
 
-import { Controller, Get, Post, Body, UseInterceptors, HttpException, HttpStatus, UploadedFile } from "@nestjs/common";
+import { Controller, Get, Post, Body, UseInterceptors, HttpException, HttpStatus, UploadedFile, Res } from "@nestjs/common";
 import { FileInterceptor } from '@nestjs/platform-express';
 import { WhatsappService } from "src/whatsapp/whatsapp.service";
 import { Connection } from 'typeorm';
 import { IWebhook, IDataOptions } from '../whatsapp/whatsapp.interface';
-import { Request } from 'express';
 
 @Controller('webhook')
 export class WebhookController {
@@ -21,6 +20,12 @@ export class WebhookController {
         return {
             success: true
         };
+    }
+
+    @Post('/uat')
+    uatBot(@Body() body: any) {
+        this.whatsappService.uatBot(body);
+        return { success: true };
     }
 
     @Get()

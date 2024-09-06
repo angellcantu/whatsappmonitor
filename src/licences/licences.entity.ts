@@ -1,6 +1,6 @@
 'use strict';
 
-import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, OneToMany, JoinColumn } from 'typeorm';
 import { Phone } from 'src/phone/phone.entity';
 
 @Entity({ name: 'licences' })
@@ -32,5 +32,9 @@ export class Licences {
 
     @Column({ name: 'updated_at', type: 'datetime', nullable: true, onUpdate: 'CURRENT_TIMESTAMP' })
     updated_at: Date;
+
+    @OneToMany(() => Phone, phone => phone.licences)
+    @JoinColumn()
+    phones: Array<Phone>
 
 }
