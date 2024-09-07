@@ -530,8 +530,9 @@ export class WhatsappService {
                     let [_default] = await this.connection.query('EXEC uat.ValidateCommand @0, @1;', ['', 3]);
                     this.maytApi.sendMessage(`${_default.message}${_default.name}`, userId, phone_id);
                 }
-            } else if (!form_id && String(message?.text).match(new RegExp('/'))) {
-                let [command] = await this.connection.query('EXEC uat.ValidateCommand @0;', [String(message.text)]);
+            } else if (!form_id && (message && /[\d/]+/g.test(String(message.text).trim()))) {
+                let [_, text] = String(message.text).trim().split('/');
+                let [command] = await this.connection.query('EXEC uat.ValidateCommand @0;', [`/${text}`]);
 
                 if (command) {
                     // get the form identifier by command identifier
