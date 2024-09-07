@@ -82,9 +82,11 @@ export class WebhookController {
                     let [_default] = await this.connection.query('EXEC forms.ValidateCommand @0, @1;', ['', 3]);
                     console.log(`${_default.message}${_default.name}`);
                 }
-            } else if (!form_id && (message && String(message.text).match(new RegExp('/')))) {
+            } else if (!form_id && (message && /[\d/]+/g.test(String(message.text).trim()))) {
                 console.log('Valid command and starting the new form');
-                let [command] = await this.connection.query('EXEC forms.ValidateCommand @0;', [message.text]);
+                let [_, text] = String(message.text).trim().split('/');
+                console.log(String(message.text).trim().split('/'));
+                let [command] = await this.connection.query('EXEC forms.ValidateCommand @0;', [`/${text}`]);
 
                 if (command) {
                     // get the form identifier by command identifier
@@ -117,7 +119,7 @@ export class WebhookController {
                         }
                     }
                 } else {
-                    body.message.text = 'Hi';
+                    body.message.text = '/menu';
                     return this.storedProcedure(body);
                 }
             } else {
