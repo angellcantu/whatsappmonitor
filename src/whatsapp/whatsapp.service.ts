@@ -542,33 +542,35 @@ export class WhatsappService {
                     // validate if the user already fill the form
                     let validations = await this.connection.query('EXEC uat.ValidateIfFormIsFilled @0, @1;', [request.id, id]);
 
-                    if (validations.length) {
+                    // updating the form in the session request
+                    let [formSessionRequest] = await this.connection.query('EXEC uat.UpdateFormToSessionRequest @0, @1;', [request.id, id]);
+
+                    if (formSessionRequest) {
+                        // we need to send the first message
+                        let [question] = await this.connection.query('EXEC uat.SaveAnswerAndRetrieveNextQuestion @0, @1, @2;', [request.id, session.id, '']);
+                        
+                        if (question.question_options) {
+                            let options: Array<string> = String(question.question_options).split(',');
+                            this.maytApi.sendPoll({
+                                phone: userId,
+                                message: question.name,
+                                options: options,
+                                phone_id: phone_id
+                            });
+                        } else {
+                            this.maytApi.sendMessage(question.name, userId, phone_id);
+                        }
+                    }
+
+                    /*if (validations.length) {
                         let [validation] = validations;
 
                         if (validation.is_filled > 0) {
                             this.maytApi.sendMessage(validation.message, userId, phone_id);
                         } else {
-                            // updating the form in the session request
-                            let [formSessionRequest] = await this.connection.query('EXEC uat.UpdateFormToSessionRequest @0, @1;', [request.id, id]);
-
-                            if (formSessionRequest) {
-                                // we need to send the first message
-                                let [question] = await this.connection.query('EXEC uat.SaveAnswerAndRetrieveNextQuestion @0, @1, @2;', [request.id, session.id, '']);
-                                
-                                if (question.question_options) {
-                                    let options: Array<string> = String(question.question_options).split(',');
-                                    this.maytApi.sendPoll({
-                                        phone: userId,
-                                        message: question.name,
-                                        options: options,
-                                        phone_id: phone_id
-                                    });
-                                } else {
-                                    this.maytApi.sendMessage(question.name, userId, phone_id);
-                                }
-                            }
+                            
                         }
-                    }
+                    }*/
                 } else {
                     body.message.text = 'Hi';
                     return this.uatBot(body);
