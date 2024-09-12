@@ -645,8 +645,6 @@ export class WhatsappService {
 
         if (responses && responses.length) {
             let [response] = responses;
-            this.logger.log(response);
-            this.logger.log(params);
             let answers = await this.connection.query('EXEC uat.RetrieveFormResponse @0, @1, @2;', [response.name, params.request_id, params.session_id]);
 
             if (answers && answers.length) {
