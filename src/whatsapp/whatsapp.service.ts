@@ -596,59 +596,76 @@ export class WhatsappService {
 
                 let questions = await this.connection.query('EXEC uat.SaveAnswerAndRetrieveNextQuestion @0, @1, @2;', [request.id, session.id, answer]);
 
-                if (questions && questions.length) {
-                    let [question] = questions;
-                    if (question.question_options) {
-                        let options: Array<string> = String(question.question_options).split(',');
-                        this.maytApi.sendPoll({
-                            phone: userId,
-                            message: question.name,
-                            options: options,
-                            phone_id: phone_id
-                        });
+                // validate the initial answer
+                let formResponse: boolean = await this.validateUATFormResponses({
+                    request_id: request.id,
+                    session_id: session.id,
+                    user_id: userId,
+                    phone_id: phone_id
+                });
+
+                if (!formResponse) {
+                    if (questions && questions.length) {
+                        let [question] = questions;
+                        if (question.question_options) {
+                            let options: Array<string> = String(question.question_options).split(',');
+                            this.maytApi.sendPoll({
+                                phone: userId,
+                                message: question.name,
+                                options: options,
+                                phone_id: phone_id
+                            });
+                        } else {
+                            this.maytApi.sendMessage(question.name, userId, phone_id);
+                        }
                     } else {
-                        this.maytApi.sendMessage(question.name, userId, phone_id);
-                    }
-                } else {
-                    // validate if the form has command response, this only apply if the form has a single question
-                    let responses = await this.connection.query('EXEC uat.ValidateFormResponses @0;', [request.id]);
-
-                    if (responses && responses.length) {
-                        let [response] = responses;
-                        let answers = await this.connection.query('EXEC uat.RetrieveFormResponse @0, @1, @2;', [response.name, request.id, session.id]);
-
-                        if (answers && answers.length) {
-                            let [answer] = answers;
-
-                            // send the message
-                            await this.maytApi.sendMessage(answer.name, userId, phone_id);
-
-                            if (answer.latitude && answer.longitude) {
-                                // send here the location
-                                this.maytApi.sendLocation({
-                                    latitude: answer.latitude,
-                                    longitude: answer.longitude,
-                                    phone: userId,
-                                    phone_id: phone_id
-                                });
+                        // close the internal session
+                        let [_session] = await this.connection.query('EXEC uat.ClosedSessionRequest @0;', [request.id]);
+    
+                        if (_session) {
+                            let { form_id } = _session;
+    
+                            if (form_id) {
+                                let [defaultCommand] = await this.connection.query('EXEC uat.ValidateCommand @0, @1;', ['', 1]);
+                                this.maytApi.sendMessage(defaultCommand.name, userId, phone_id);
                             }
                         }
                     }
-
+                } else {
                     // close the internal session
-                    let [_session] = await this.connection.query('EXEC uat.ClosedSessionRequest @0;', [request.id]);
-
-                    if (_session) {
-                        let { form_id } = _session;
-
-                        if (form_id) {
-                            let [defaultCommand] = await this.connection.query('EXEC uat.ValidateCommand @0, @1;', ['', 1]);
-                            this.maytApi.sendMessage(defaultCommand.name, userId, phone_id);
-                        }
-                    }
+                    await this.connection.query('EXEC uat.ClosedSessionRequest @0;', [request.id]);
                 }
             }
         }
+    }
+
+    private async validateUATFormResponses(params: { request_id: number, session_id: number, user_id: string, phone_id: number }): Promise<boolean> {
+        // validate if the form has command response, this only apply if the form has a single question
+        let responses = await this.connection.query('EXEC uat.ValidateFormResponses @0;', [params.request_id]);
+
+        if (responses && responses.length) {
+            let [response] = responses;
+            let answers = await this.connection.query('EXEC uat.RetrieveFormResponse @0, @1, @2;', [response.name, params.request_id, params.session_id]);
+
+            if (answers && answers.length) {
+                let [answer] = answers;
+
+                // send the message
+                await this.maytApi.sendMessage(answer.name, params.user_id, params.phone_id);
+
+                if (answer.latitude && answer.longitude) {
+                    // send here the location
+                    this.maytApi.sendLocation({
+                        latitude: answer.latitude,
+                        longitude: answer.longitude,
+                        phone: params.user_id,
+                        phone_id: params.phone_id
+                    });
+                }
+                return true;
+            }
+        }
+        return false;
     }
 
     private async createGroupFromAPI(phone_id: string, group_id: string, contact: Contact): Promise<Group | undefined> {
