@@ -515,7 +515,11 @@ export class WhatsappService {
 
         if (message && !message?.fromMe) {
             // save the request
-            let [request] = await this.connection.query('EXEC uat.SaveRequests @0;', [userId]);
+            let name: string = '';
+            if (user) {
+                name = user?.name;
+            }
+            let [request] = await this.connection.query('EXEC uat.SaveRequests @0, @1;', [userId, name || null]);
 
             // create the internal session
             let [session] = await this.connection.query('EXEC uat.CreateSessionRequest @0;', [request.id]);
