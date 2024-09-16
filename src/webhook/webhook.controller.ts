@@ -1,6 +1,6 @@
 'use strict';
 
-import { Controller, Get, Post, Body, UseInterceptors, HttpException, HttpStatus, UploadedFile, Res } from "@nestjs/common";
+import { Controller, Get, Post, Body, UseInterceptors, HttpException, HttpStatus, UploadedFile } from "@nestjs/common";
 import { FileInterceptor } from '@nestjs/platform-express';
 import { WhatsappService } from "src/whatsapp/whatsapp.service";
 import { Connection } from 'typeorm';
