@@ -4,12 +4,12 @@ import { Repository } from "typeorm";
 import { Group } from './group.entity'
 import { IGroup } from "./group.interface";
 import { IntegrantService } from "src/integrant/integrant.service";
-import { GroupQueries } from "./group.queries";
 import { Message } from "src/message/message.entity";
 import { MessageService } from "src/message/message.service";
-import { IIntegrant } from "src/integrant/IIntegrant.interface";
 import { Integrant } from "src/integrant/integrant.entity";
 import { IMunicipio } from "src/municipio/municipio.interface";
+import { CreateGroupDto } from './group.dto';
+import { MaytApiService } from '../whatsapp/maytapi.service';
 
 @Injectable()
 export class GroupService {
@@ -17,7 +17,8 @@ export class GroupService {
         @InjectRepository(Group)
         private groupRepository: Repository<Group>,
         private readonly integrantService: IntegrantService,
-        private readonly messageService: MessageService
+        private readonly messageService: MessageService,
+        private readonly maytApiService: MaytApiService
     ) { }
 
     async findAllGroups(): Promise<Group[] | undefined> {
@@ -224,4 +225,17 @@ export class GroupService {
             console.log(error);
         }
     }
+
+    async create(group: CreateGroupDto): Promise<Group> {
+        let integrants: Array<string> = group.integrants.map(integrant => `521${integrant}`);
+        let maytApiGroup = await this.maytApiService.createGroup({ name: group.name, integrants: integrants });
+        let _group: Group = this.groupRepository.create({
+            id_group: maytApiGroup.id,
+            name: group.name,
+            image: group?.image
+        });
+        await this.groupRepository.save(_group);
+        return _group;
+    }
+
 }
