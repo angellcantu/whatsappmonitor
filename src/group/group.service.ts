@@ -297,12 +297,18 @@ export class GroupService {
     }
 
     async getGroupInformation(id: number) {
-        return this.groupRepository.findOne({
+        let group = await this.groupRepository.findOne({
             where: { id: id },
             relations: {
                 integrants: true
             }
         });
+
+        if (!group) {
+            throw new HttpException('Group not found', HttpStatus.NOT_FOUND);
+        }
+
+        return group;
     }
 
 }
