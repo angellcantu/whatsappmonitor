@@ -35,6 +35,7 @@ import { FtpService } from './whatsapp/ftp.service';
 import { Log } from './log/log.entity';
 import { join } from 'path';
 import { AuthModule } from './auth/auth.module';
+import { AuthMiddleware } from './middlewares/auth.middleware';
 
 
 @Module({
@@ -70,4 +71,12 @@ import { AuthModule } from './auth/auth.module';
 		FtpService
 	],
 })
-export class AppModule { };
+export class AppModule implements NestModule {
+	
+	configure(consumer: MiddlewareConsumer) {
+		consumer
+			.apply(AuthMiddleware)
+			.forRoutes(GroupController);
+	}
+
+};

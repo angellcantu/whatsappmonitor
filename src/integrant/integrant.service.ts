@@ -2,19 +2,13 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository, In } from "typeorm";
 import { Integrant } from "src/integrant/integrant.entity";
-import { ContactService } from "src/contact/contact.service";
-import { Contact } from "src/contact/contact.entity";
 import { IIntegrant } from "./IIntegrant.interface";
-import { IntegrantQueries } from "./integrant.queries";
-// import { Participant } from "src/participant/participant.entity";
 
 @Injectable()
 export class IntegrantService {
     constructor(
         @InjectRepository(Integrant)
-        private integrantRepository: Repository<Integrant>,
-        private readonly contactService: ContactService,
-        private readonly integrantQuery: IntegrantQueries
+        private integrantRepository: Repository<Integrant>
     ) { }
 
     async findOne(integrant_id: string): Promise<Integrant> {

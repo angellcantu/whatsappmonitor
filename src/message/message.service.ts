@@ -2,19 +2,18 @@ import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Message } from './message.entity'
-import { IMessage } from "./message.interface"; import { Integrant } from "src/integrant/integrant.entity";
+import { IMessage } from "./message.interface";
+import { Integrant } from "src/integrant/integrant.entity";
 import { IntegrantService } from "src/integrant/integrant.service";
 import { Contact } from "src/contact/contact.entity";
 import { Conversation } from "src/conversation/conversation.entity";
-import { MessageGateway } from "./message.gateway";
 
 @Injectable()
 export class MessageService {
     constructor(
         @InjectRepository(Message)
         private messageRepository: Repository<Message>,
-        private readonly integrantService: IntegrantService,
-        private readonly messageGateway: MessageGateway
+        private readonly integrantService: IntegrantService
     ) { }
 
     async findAll(): Promise<Message[]> {

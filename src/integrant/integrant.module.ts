@@ -4,11 +4,10 @@ import { IntegrantService } from './integrant.service';
 import { Integrant } from './integrant.entity';
 import { ContactService } from 'src/contact/contact.service';
 
-
 @Module({
-    imports: [TypeOrmModule.forFeature([Integrant]), ContactService],
+    imports: [TypeOrmModule.forFeature([Integrant])],
     controllers: [],
-    providers: [IntegrantService, ContactService]
+    providers: [IntegrantService, ContactService],
+    exports: [ContactService]
 })
-
-export class IntegrantModule {}
+export class IntegrantModule { }
