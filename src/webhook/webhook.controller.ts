@@ -1,12 +1,15 @@
 'use strict';
 
 import { Controller, Get, Post, Body, UseInterceptors, HttpException, HttpStatus, UploadedFile } from "@nestjs/common";
+import { ApiTags, ApiOperation, ApiExcludeController } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { WhatsappService } from "src/whatsapp/whatsapp.service";
 import { Connection } from 'typeorm';
 import { IWebhook, IDataOptions } from '../whatsapp/whatsapp.interface';
 
 @Controller('webhook')
+@ApiTags('Webhooks')
+@ApiExcludeController()
 export class WebhookController {
 
     constructor(
@@ -15,6 +18,7 @@ export class WebhookController {
     ) { }
 
     @Post()
+    @ApiOperation({ deprecated: true })
     async handleWebhook(@Body() payload: any) {
         this.whatsappService.webhookValidation(payload);
         return {
@@ -23,12 +27,14 @@ export class WebhookController {
     }
 
     @Post('/uat')
+    @ApiOperation({ deprecated: true })
     uatBot(@Body() body: any) {
         this.whatsappService.uatBot(body);
         return { success: true };
     }
 
     @Get()
+    @ApiOperation({ deprecated: true })
     loadBackground() {
         new Promise(async (resolve) => {
             await this.whatsappService.loadPhoneList();
@@ -47,6 +53,7 @@ export class WebhookController {
     }
 
     @Post('/test')
+    @ApiOperation({ deprecated: true })
     async storedProcedure(@Body() body: IWebhook) {
         let { message, user, type, data } = body,
             userId: string = '';
@@ -183,6 +190,7 @@ export class WebhookController {
     }
 
     @Post('/excel')
+    @ApiOperation({ deprecated: true })
     @UseInterceptors(FileInterceptor('file', {
         fileFilter: (_request: Request, file: Express.Multer.File, callback: (error: Error, acceptFile: boolean) => void) => {
             if (!Boolean(file.mimetype.match('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'))) {

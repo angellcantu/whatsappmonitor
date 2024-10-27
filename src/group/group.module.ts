@@ -6,6 +6,7 @@ import { Group } from './group.entity';
 import { Integrant } from 'src/integrant/integrant.entity';
 import { IntegrantService } from 'src/integrant/integrant.service';
 import { MaytApiService } from 'src/whatsapp/maytapi.service';
+import { MessageService } from 'src/message/message.service';
 import { AuthMiddleware } from 'src/middlewares/auth.middleware';
 
 @Module({
@@ -14,7 +15,8 @@ import { AuthMiddleware } from 'src/middlewares/auth.middleware';
     providers: [
         GroupService,
         IntegrantService,
-        MaytApiService
+        MaytApiService,
+        MessageService
     ]
 })
 export class GroupModule implements NestModule {

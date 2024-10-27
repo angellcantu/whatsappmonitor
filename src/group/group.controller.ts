@@ -1,9 +1,12 @@
-import { Controller, Get, Post, Body, Param } from "@nestjs/common";
+import { Controller, Get, Post, Body, Param, ParseIntPipe } from "@nestjs/common";
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiExcludeEndpoint } from '@nestjs/swagger';
 import { GroupService } from "./group.service";
 import { WhatsappService } from "src/whatsapp/whatsapp.service";
 import { CreateGroupDto } from './group.dto';
 
 @Controller('group')
+@ApiTags('Groups')
+@ApiBearerAuth()
 export class GroupController {
     
     constructor(
@@ -12,6 +15,8 @@ export class GroupController {
     ) { }
 
     @Get('groups')
+    @ApiOperation({ deprecated: true })
+    @ApiExcludeEndpoint()
     async AllGroups() {
         const groups = await this.groupService.findAllGroups();
         console.log(groups)
@@ -23,6 +28,8 @@ export class GroupController {
     }
 
     @Get('allGroups')
+    @ApiOperation({ deprecated: true })
+    @ApiExcludeEndpoint()
     async AllGroupWithIntegrants() {
         const groups = await this.groupService.findGroupsWithIntegrants();
         if (groups.length > 0) {
@@ -33,6 +40,8 @@ export class GroupController {
     }
 
     @Get('municipios')
+    @ApiOperation({ deprecated: true })
+    @ApiExcludeEndpoint()
     async AllMunicipios() {
         const municipios = await this.groupService.findMunicipios();
         if (municipios.length > 0) {
@@ -43,6 +52,8 @@ export class GroupController {
     }
 
     @Get(':groupId/messages')
+    @ApiOperation({ deprecated: true })
+    @ApiExcludeEndpoint()
     async GroupMessages(@Param('groupId') groupId: string) {
         console.log(groupId);
         const messages = await this.groupService.getGroupMessages(groupId);
@@ -55,6 +66,8 @@ export class GroupController {
     }
 
     @Get('actualizarGrupos')
+    @ApiOperation({ deprecated: true })
+    @ApiExcludeEndpoint()
     async ActualizarGrupos() {
         try {
             await this.whatsappService.loadPhoneList();
@@ -69,8 +82,15 @@ export class GroupController {
     }
 
     @Post()
+    @ApiOperation({ description: 'This service will create a new group in the provider and the database.' })
     create(@Body() group: CreateGroupDto) {
         return this.groupService.create(group);
+    }
+
+    @Get('/:id')
+    @ApiOperation({ description: 'This service will get the group information.' })
+    getGroupInformation(@Param('id', ParseIntPipe) id: number) {
+        return this.groupService.getGroupInformation(id);
     }
 
 }

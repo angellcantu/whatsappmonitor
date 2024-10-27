@@ -157,7 +157,7 @@ export class MaytApiService {
     public async createGroup(params: { name: string, integrants: Array<string>, message?: string}) {
         let body = {
             name: params.name,
-            integrants: params.integrants,
+            numbers: params.integrants,
             sendInvite: true,
             message: params.message || 'Hello!'
         };
@@ -171,6 +171,7 @@ export class MaytApiService {
                 } }
             ).pipe(
                 catchError((error: AxiosError) => {
+                    console.log(error);
                     throw new HttpException(error.message, HttpStatus.CONFLICT);
                 })
             )

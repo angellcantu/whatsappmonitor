@@ -2,6 +2,7 @@
 
 import { NestFactory } from '@nestjs/core';
 import { Logger, ValidationPipe } from '@nestjs/common';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 
 const logger = new Logger('Main');
@@ -18,6 +19,18 @@ async function bootstrap() {
 		credentials: true
 	});
 	app.useGlobalPipes(new ValidationPipe());
+
+	// creating the documentation
+	const config = new DocumentBuilder()
+		.setTitle('WhatsApp API for ServiProgramasVic')
+		.setDescription('API Rest for manage groups and more')
+		.setVersion('1.0')
+		.addBearerAuth()
+		.build();
+	
+	const document = SwaggerModule.createDocument(app, config);
+	SwaggerModule.setup('documentation', app, document);
+
 	await app.listen(process.env.PORT || 3000);
 	logger.log(`Main service started on port ${process.env.PORT || 3000}`);
 }
