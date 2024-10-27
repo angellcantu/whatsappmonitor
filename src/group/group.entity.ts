@@ -4,16 +4,21 @@ import { Column, CreateDateColumn, UpdateDateColumn, Entity, JoinTable, ManyToMa
 
 @Entity()
 export class Group {
+
     @PrimaryGeneratedColumn()
-    id: number;
+    id?: number;
+
     @Column()
-    id_group: string;
+    id_group?: string;
+
     @Column({ unique: true })
     name: string;
+
     @Column({ nullable: true })
     image: string;
+
     @Column({ type: 'nvarchar', length: 'max', nullable: true })
-    config: Record<string, any>;
+    config?: Record<string, any>;
 
     @ManyToMany(() => Integrant, integrant => integrant.groups, { nullable: true })
     @JoinTable({
@@ -25,38 +30,39 @@ export class Group {
             name: 'integrant_id',
         }
     })
-    integrants: Integrant[]
+    integrants?: Integrant[]
 
-    @Column({ nullable: true, default: 0})
-    id_municipio: number;
+    @Column({ nullable: true, default: 0 })
+    id_municipio?: number;
 
     @CreateDateColumn({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
-    createdAt: Date;
-  
+    createdAt?: Date;
+
     @UpdateDateColumn({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
-    updatedAt: Date;
+    updatedAt?: Date;
 
     @Column({ default: true })
-    status: boolean;
-
-    @Column({nullable: true})
-    last_message_date: string;
-
-    @Column({ nullable: true, default: 0 })
-    id_personaje: number;
+    status?: boolean;
 
     @Column({ nullable: true })
-    descripcion: string;
+    last_message_date?: string;
 
     @Column({ nullable: true, default: 0 })
-    id_responable: number;
+    id_personaje?: number;
 
     @Column({ nullable: true })
-    Responsable: string;
+    descripcion?: string;
+
+    @Column({ nullable: true, default: 0 })
+    id_responable?: number;
+
+    @Column({ nullable: true })
+    Responsable?: string;
 
     @CreateDateColumn({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
-    FechaModificacion: Date;
+    FechaModificacion?: Date;
 
     @Column({ nullable: true, default: 0 })
-    IdUsuarioModifica: number;
+    IdUsuarioModifica?: number;
+    
 }

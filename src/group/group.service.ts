@@ -1,23 +1,29 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException, HttpException, HttpStatus, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Group } from './group.entity'
 import { IGroup } from "./group.interface";
-import { IntegrantService } from "src/integrant/integrant.service";
-import { GroupQueries } from "./group.queries";
 import { Message } from "src/message/message.entity";
 import { MessageService } from "src/message/message.service";
-import { IIntegrant } from "src/integrant/IIntegrant.interface";
+import { ContactService } from 'src/contact/contact.service';
+import { IntegrantService } from 'src/integrant/integrant.service';
 import { Integrant } from "src/integrant/integrant.entity";
 import { IMunicipio } from "src/municipio/municipio.interface";
+import { CreateGroupDto } from './group.dto';
+import { MaytApiService } from '../whatsapp/maytapi.service';
 
 @Injectable()
 export class GroupService {
+
+    private readonly logger = new Logger('Group Service');
+
     constructor(
         @InjectRepository(Group)
         private groupRepository: Repository<Group>,
-        private readonly integrantService: IntegrantService,
-        private readonly messageService: MessageService
+        private readonly messageService: MessageService,
+        private readonly maytApiService: MaytApiService,
+        private readonly contact: ContactService,
+        private readonly integrant: IntegrantService
     ) { }
 
     async findAllGroups(): Promise<Group[] | undefined> {
@@ -166,6 +172,7 @@ export class GroupService {
             console.log(error)
         }
     }
+
     async saveIntegrantsInGroup(group: Group): Promise<void> {
         try {
             console.log('Sigue siendo el id: ', group.id);
@@ -224,4 +231,78 @@ export class GroupService {
             console.log(error);
         }
     }
+
+    async create(group: CreateGroupDto): Promise<Group> {
+        try {
+            let newIntegrants: Array<Integrant> = [];
+            let integrants: Array<string> = group.integrants.map(integrant => `521${integrant}`);
+            let maytApi = await this.maytApiService.createGroup({ name: group.name, integrants: integrants });
+
+            if (!maytApi?.success) {
+                throw new HttpException('Error creating the group with the provider', HttpStatus.CONFLICT);
+            }
+
+            // creating the group
+            let _group: Group = this.groupRepository.create({
+                id_group: maytApi?.data?.id,
+                name: group.name,
+                image: group?.image
+            });
+            await this.groupRepository.save(_group);
+
+            // getting the contact information
+            if (maytApi?.data?.participants.length) {
+                maytApi?.data?.participants.map(async (item: string) => {
+                    let contact = await this.contact.findOne(item);
+                    if (!contact) {
+                        let contactMaytApi = await this.maytApiService.getContactInformation(item);
+
+                        if (contactMaytApi?.success && contactMaytApi?.data?.length) {
+                            let [_contact] = contactMaytApi?.data;
+                            contact = await this.contact.createContact({
+                                contact_id: _contact.id,
+                                name: _contact.name,
+                                type: _contact.type,
+                                images: null
+                            });
+                        }
+                    }
+
+                    let integrant = await this.integrant.findOne(item);
+                    if (!integrant) {
+                        let integrantMaytApi = await this.maytApiService.getContactInformation(item);
+
+                        if (integrantMaytApi?.success && integrantMaytApi?.data?.length) {
+                            let [_integrant] = integrantMaytApi?.data;
+                            let [number] = _integrant?.id.split('@');
+                            let [_, firstNumbers] = number.split('521');
+                            integrant = await this.integrant.createIntegrant({
+                                name: _integrant.name,
+                                integrant_id: _integrant.id,
+                                phone_number: firstNumbers,
+                                type: 'participant',
+                                groups: [_group]
+                            });
+                        }
+                    }
+                    newIntegrants.push(integrant);
+                    return item;
+                });
+                this.updateGroupIntegrants(_group, newIntegrants);
+            }
+            return _group;
+        } catch (error) {
+            throw new HttpException(error.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    async getGroupInformation(id: number) {
+        return this.groupRepository.findOne({
+            where: { id: id },
+            relations: {
+                integrants: true
+            }
+        });
+    }
+
 }

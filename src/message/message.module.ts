@@ -6,9 +6,10 @@ import { IntegrantService } from 'src/integrant/integrant.service';
 
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Message]), IntegrantService],
+    imports: [TypeOrmModule.forFeature([Message])],
     controllers: [],
-    providers: [MessageService, IntegrantService]
+    providers: [MessageService, IntegrantService],
+    exports: [MessageService]
 })
 
 export class MessageModule {}
