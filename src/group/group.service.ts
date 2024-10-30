@@ -9,13 +9,12 @@ import { ContactService } from 'src/contact/contact.service';
 import { IntegrantService } from 'src/integrant/integrant.service';
 import { Integrant } from "src/integrant/integrant.entity";
 import { IMunicipio } from "src/municipio/municipio.interface";
-import { CreateGroupDto } from './group.dto';
+import { CreateGroupDto, AddIntegrantDto } from './group.dto';
 import { MaytApiService } from '../whatsapp/maytapi.service';
+import { Contact } from "src/contact/contact.entity";
 
 @Injectable()
 export class GroupService {
-
-    private readonly logger = new Logger('Group Service');
 
     constructor(
         @InjectRepository(Group)
@@ -232,6 +231,11 @@ export class GroupService {
         }
     }
 
+    /**
+     * This function will create a new group in the provider and database.
+     * @param group group object with the necessary information
+     * @returns new object with the group information
+     */
     async create(group: CreateGroupDto): Promise<Group> {
         try {
             let newIntegrants: Array<Integrant> = [];
@@ -253,7 +257,7 @@ export class GroupService {
             // getting the contact information
             if (maytApi?.data?.participants.length) {
                 maytApi?.data?.participants.map(async (item: string) => {
-                    let contact = await this.contact.findOne(item);
+                    let contact: Contact = await this.contact.findOne(item);
                     if (!contact) {
                         let contactMaytApi = await this.maytApiService.getContactInformation(item);
 
@@ -268,7 +272,7 @@ export class GroupService {
                         }
                     }
 
-                    let integrant = await this.integrant.findOne(item);
+                    let integrant: Integrant = await this.integrant.findOne(item);
                     if (!integrant) {
                         let integrantMaytApi = await this.maytApiService.getContactInformation(item);
 
@@ -290,25 +294,86 @@ export class GroupService {
                 });
                 this.updateGroupIntegrants(_group, newIntegrants);
             }
-            return _group;
+            return await this.getGroupInformation(_group?.id);
         } catch (error) {
             throw new HttpException(error.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
+    /**
+     * This function will return the group information.
+     * @param id group identifier, this must be a identifier value
+     * @returns group object information
+     */
     async getGroupInformation(id: number) {
-        let group = await this.groupRepository.findOne({
-            where: { id: id },
-            relations: {
-                integrants: true
+        try {
+            let group = await this.groupRepository.findOne({
+                where: { id: id },
+                relations: {
+                    integrants: true
+                }
+            });
+            if (!group) {
+                throw new HttpException('Group not found', HttpStatus.NOT_FOUND);
             }
-        });
-
-        if (!group) {
-            throw new HttpException('Group not found', HttpStatus.NOT_FOUND);
+            return group;
+        } catch (error) {
+            throw new HttpException(error.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
 
-        return group;
+    /**
+     * This function will add a new integrant in a specific group.
+     * @param body group object with the necessary information
+     * @returns new object
+     */
+    async addIntegrant(body: AddIntegrantDto) {
+        try {
+            let newIntegrants: Array<Integrant> = [];
+            let group = await this.getGroupInformation(body?.id);
+            let integrants = body?.integrants?.map(integrant => `521${integrant}`);
+            integrants = await Promise.all(integrants?.map(item => {
+                let [integrant] = group?.integrants?.filter(inte => {
+                    let [phone] = inte?.id_integrant.split('@c.us');
+                    if (phone === item) {
+                        return item;
+                    }
+                });
+                if (!integrant) {
+                    return item;
+                }
+            }))
+            .then(response => response.filter(item => typeof item === 'string'));
+            
+            let addMaytApi = await this.maytApiService.addIntegrant({
+                groupId: group?.id_group,
+                integrants: integrants,
+                message: `Bienvenido al grupo: ${group?.name}!!`,
+            });
+
+            if (addMaytApi.success) {
+                integrants?.map(async (item) => {
+                    let information = await this.maytApiService.getContactInformation(`${item}@c.us`);
+                    if (information?.success && information?.data?.length) {
+                        let [_integrant] = information?.data;
+                        let [_, phone] = item.split('521');
+                        let newIntegrant: Integrant = await this.integrant.createIntegrant({
+                            name: _integrant.name,
+                            integrant_id: _integrant.id,
+                            phone_number: phone,
+                            type: 'participant',
+                            groups: [group]
+                        });
+                        newIntegrants.push(newIntegrant);
+                    }
+                    return item;
+                });
+                this.updateGroupIntegrants(group, newIntegrants);
+            }
+            return this.getGroupInformation(group?.id);
+        } catch (error) {
+            throw new HttpException(error.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
 
 }

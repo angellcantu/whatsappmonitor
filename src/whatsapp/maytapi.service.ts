@@ -179,6 +179,30 @@ export class MaytApiService {
         return data;
     }
 
+    public async addIntegrant(params: { groupId: string, integrants: Array<string>, message?: string }) {
+        let body = {
+            conversation_id: params.groupId,
+            numbers: params.integrants,
+            sendInvite: true,
+            message: params.message || 'Hello!!',
+        };
+        let { data }: AxiosResponse = await firstValueFrom(
+            this.http.post(
+                `${this.config.get<string>('INSTANCE_URL')}/${this.config.get<string>('PRODUCT_ID')}/${this.config.get<string>('PHONE_ID')}/group/add`,
+                { ...body },
+                { headers: {
+                    'Content-Type': 'application/json',
+                    'x-maytapi-key': this.config.get<string>('API_TOKEN'),
+                } }
+            ).pipe(
+                catchError((error: AxiosError) => {
+                    throw new HttpException(error.message, HttpStatus.CONFLICT);
+                })
+            )
+        );
+        return data;
+    }
+
     public async fetchImage(url: string) {
         let { data }: AxiosResponse = await firstValueFrom(
             this.http.get(url, { responseType: 'arraybuffer' }).pipe(

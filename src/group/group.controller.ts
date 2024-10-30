@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Param, ParseIntPipe } from "@nestjs/common
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiExcludeEndpoint } from '@nestjs/swagger';
 import { GroupService } from "./group.service";
 import { WhatsappService } from "src/whatsapp/whatsapp.service";
-import { CreateGroupDto } from './group.dto';
+import { CreateGroupDto, AddIntegrantDto } from './group.dto';
 
 @Controller('group')
 @ApiTags('Groups')
@@ -91,6 +91,12 @@ export class GroupController {
     @ApiOperation({ description: 'This service will get the group information.' })
     getGroupInformation(@Param('id', ParseIntPipe) id: number) {
         return this.groupService.getGroupInformation(id);
+    }
+
+    @Post('/integrant')
+    @ApiOperation({ description: 'This service will add a new integrant in the group' })
+    addIntegrant(@Body() body: AddIntegrantDto) {
+        return this.groupService.addIntegrant(body);
     }
 
 }
