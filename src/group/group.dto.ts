@@ -7,7 +7,7 @@ import { Type } from 'class-transformer';
 export class CreateGroupDto {
 
     @ApiProperty()
-    @IsNotEmpty({ message: 'The `name` fiela cannot be empty.' })
+    @IsNotEmpty({ message: 'The `name` field cannot be empty.' })
     name: string;
 
     @ApiProperty()
@@ -32,5 +32,17 @@ export class GetGroupInformation {
     @IsNumber()
     @Type(() => Number)
     id: number;
+
+}
+
+export class AddIntegrantDto {
+
+    @ApiProperty()
+    @IsNotEmpty({ message: 'The `id` field cannot be empty.' })
+    id: number;
+
+    @ApiProperty()
+    @IsNotEmpty({ message: 'The `integrants` field cannot be empty.' })
+    integrants: Array<string>;
 
 }
