@@ -239,6 +239,14 @@ export class GroupService {
     async create(group: CreateGroupDto): Promise<Group> {
         try {
             let newIntegrants: Array<Integrant> = [];
+
+            // validate if the group name already exist
+            let record: Group = await this.groupRepository.findOne({ where: { name: group?.name } });
+
+            if (record) {
+                throw new HttpException(`This group with the name ${record.name} alredy exist.`, HttpStatus.CONFLICT);
+            }
+
             let integrants: Array<string> = group.integrants.map(integrant => `521${integrant}`);
             let maytApi = await this.maytApiService.createGroup({ name: group.name, integrants: integrants });
 
