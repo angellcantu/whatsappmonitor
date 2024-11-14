@@ -259,7 +259,7 @@ export class WhatsappService {
     async webhookValidation(response: IWebhook) {
         let phone_id: number = response?.phone_id;
 
-        if (String(response?.user?.id).length > 18) {
+        if (String(response?.conversation).length > 18) {
             await this.phoneService.findPhone(phone_id);
 
             var newConversation: string = response?.conversation;
