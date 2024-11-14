@@ -300,7 +300,7 @@ export class GroupService {
                     newIntegrants.push(integrant);
                     return item;
                 });
-                this.updateGroupIntegrants(_group, newIntegrants);
+                await this.updateGroupIntegrants(_group, newIntegrants);
             }
             return await this.getGroupInformation(_group?.id);
         } catch (error) {
@@ -324,7 +324,41 @@ export class GroupService {
             if (!group) {
                 throw new HttpException('Group not found', HttpStatus.NOT_FOUND);
             }
-            return group;
+            const _group = await this.maytApiService.getGroupInformation(group.id_group);
+            if (_group.success && _group?.data?.participants.length) {
+                await Promise.allSettled(_group?.data?.participants.map(async (item: string) => {
+                    const information = await this.maytApiService.getContactInformation(item);
+                    if (information?.success && information?.data?.length) {
+                        const [integrant] = information?.data;
+                        const phone = item.split('521')[1].split('@c.us')[0];
+                        const newIntegrant: Integrant = await this.integrant.createIntegrant({
+                            name: integrant?.name,
+                            integrant_id: integrant?.id,
+                            phone_number: phone,
+                            type: 'participant',
+                            groups: [group]
+                        });
+                        return newIntegrant;
+                    }
+                }))
+                    .then(response => {
+                        const integrants: Array<Integrant> = [];
+                        response.forEach(item => {
+                            if (item.status === 'fulfilled') {
+                                integrants.push(item.value);
+                            }
+                        });
+                        return integrants;
+                    })
+                    .then(async (response) => await this.updateGroupIntegrants(group, response))
+                    .catch(error => console.error(error));
+            }
+            return await this.groupRepository.findOne({
+                where: { id },
+                relations: {
+                    integrants: true,
+                },
+            });
         } catch (error) {
             throw new HttpException(error.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -337,7 +371,6 @@ export class GroupService {
      */
     async addIntegrant(body: AddIntegrantDto) {
         try {
-            let newIntegrants: Array<Integrant> = [];
             let group = await this.getGroupInformation(body?.id);
             let integrants = body?.integrants?.map(integrant => `521${integrant}`);
             integrants = await Promise.all(integrants?.map(item => {
@@ -351,8 +384,8 @@ export class GroupService {
                     return item;
                 }
             }))
-            .then(response => response.filter(item => typeof item === 'string'));
-            
+                .then(response => response.filter(item => typeof item === 'string'));
+
             let addMaytApi = await this.maytApiService.addIntegrant({
                 groupId: group?.id_group,
                 integrants: integrants,
@@ -360,25 +393,8 @@ export class GroupService {
             });
 
             if (addMaytApi.success) {
-                integrants?.map(async (item) => {
-                    let information = await this.maytApiService.getContactInformation(`${item}@c.us`);
-                    if (information?.success && information?.data?.length) {
-                        let [_integrant] = information?.data;
-                        let [_, phone] = item.split('521');
-                        let newIntegrant: Integrant = await this.integrant.createIntegrant({
-                            name: _integrant.name,
-                            integrant_id: _integrant.id,
-                            phone_number: phone,
-                            type: 'participant',
-                            groups: [group]
-                        });
-                        newIntegrants.push(newIntegrant);
-                    }
-                    return item;
-                });
-                this.updateGroupIntegrants(group, newIntegrants);
+                return this.getGroupInformation(group?.id);
             }
-            return this.getGroupInformation(group?.id);
         } catch (error) {
             throw new HttpException(error.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
