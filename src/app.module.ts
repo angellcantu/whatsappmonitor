@@ -35,6 +35,7 @@ import { FtpService } from './whatsapp/ftp.service';
 import { Log } from './log/log.entity';
 import { join } from 'path';
 import { AuthModule } from './auth/auth.module';
+import { AppSheetModules } from './webhook/appsheet/appsheet.module';
 import { AuthMiddleware } from './middlewares/auth.middleware';
 
 
@@ -44,14 +45,15 @@ import { AuthMiddleware } from './middlewares/auth.middleware';
 			isGlobal: true,
 			envFilePath: join(__dirname, '../.env')
 		}),
-		HttpModule,
 		DatabaseModule,
 		PhoneModule,
 		ContactModule,
 		TypeOrmModule.forFeature([Contact, Group, Integrant, Message, Conversation, Log]),
 		UserModule,
 		LicencesModule,
-		AuthModule
+		AuthModule,
+		AppSheetModules,
+		HttpModule,
 	],
 	controllers: [AppController, WebhookController, GroupController, ContactController],
 	providers: [
