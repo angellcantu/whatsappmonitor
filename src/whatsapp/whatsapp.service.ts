@@ -257,6 +257,7 @@ export class WhatsappService {
     }
 
     async webhookValidation(response: IWebhook) {
+        this.logger.log(response);
         let phone_id: number = response?.phone_id;
 
         if (String(response?.conversation).length > 18) {
@@ -324,11 +325,27 @@ export class WhatsappService {
                     this.logger.error(error);
                 }
             }
+            /* validate message type for group invites or leaves */
+            if (response?.message && response?.message?.type == 'info') {
+                // validate subtype
+                if (['group/invite'].includes(response?.message?.subtype)) {
+                    // we will add the user in the group
+                    this.groupInvite(response);
+                }
+                if (['group/leave'].includes(response?.message?.subtype)) {
+                    this.logger.log('User leaving');
+                }
+            }
         }
 
         if (String(response?.user?.id).length <= 18) {
             return this.bot(response);
         }
+    }
+
+    private async groupInvite(request: IWebhook) {
+        let contact: Contact = await this.contactService.findOne(request?.message?.participant);
+        this.logger.log(contact);
     }
 
     // Private methods
