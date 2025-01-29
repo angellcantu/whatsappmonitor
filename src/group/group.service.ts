@@ -400,4 +400,13 @@ export class GroupService {
         }
     }
 
+    async findIntegrantInGroup(groupId: string) {
+        return await this.groupRepository.findOne({
+            where: { id_group: groupId },
+            relations: {
+                integrants: true,
+            },
+        });
+    }
+
 }

@@ -22,7 +22,7 @@ import { Message } from "src/message/message.entity";
 import { IMessage } from "src/message/message.interface";
 import { MaytApiService } from './maytapi.service';
 import { Connection } from 'typeorm';
-import { IWebhook, IDataOptions } from './whatsapp.interface';
+import { IWebhook, IDataOptions, IWebhookDataBase } from './whatsapp.interface';
 import { FtpService } from './ftp.service';
 import * as ExcelToJson from 'convert-excel-to-json';
 
@@ -263,6 +263,18 @@ export class WhatsappService {
         if (String(response?.conversation).length > 18) {
             await this.phoneService.findPhone(phone_id);
 
+            /* validate message type for group invites or leaves */
+            if (response?.message && response?.message?.type == 'info') {
+                // validate subtype
+                if (['group/invite'].includes(response?.message?.subtype)) {
+                    // we will add the user in the group
+                    this.groupInvite(response);
+                }
+                if (['group/leave'].includes(response?.message?.subtype)) {
+                    this.logger.log('User leaving');
+                }
+            }
+
             var newConversation: string = response?.conversation;
             const contact: Contact = await this.contactService.findOne(newConversation);
 
@@ -325,17 +337,6 @@ export class WhatsappService {
                     this.logger.error(error);
                 }
             }
-            /* validate message type for group invites or leaves */
-            if (response?.message && response?.message?.type == 'info') {
-                // validate subtype
-                if (['group/invite'].includes(response?.message?.subtype)) {
-                    // we will add the user in the group
-                    this.groupInvite(response);
-                }
-                if (['group/leave'].includes(response?.message?.subtype)) {
-                    this.logger.log('User leaving');
-                }
-            }
         }
 
         if (String(response?.user?.id).length <= 18) {
@@ -344,8 +345,65 @@ export class WhatsappService {
     }
 
     private async groupInvite(request: IWebhook) {
-        let contact: Contact = await this.contactService.findOne(request?.message?.participant);
-        this.logger.log(contact);
+        // get the group information
+        const { message, conversation } = request;
+        let group: Group = await this.groupService.findGroup(conversation);
+
+        if (group) {
+            let contact: Contact = await this.contactService.findOne(message?.participant);
+            // if the contact does not exist then create it
+            if (!contact) {
+                let contactMaytApi = await this.maytApi.getContactInformation(message?.participant);
+                if (contactMaytApi?.success && contactMaytApi?.data?.length) {
+                    let [_contact] = contactMaytApi?.data;
+                    contact = await this.contactService.createContact({
+                        contact_id: _contact.id,
+                        name: _contact.name,
+                        type: _contact.type,
+                        images: null,
+                    });
+                }
+            }
+
+            let integrant: Integrant = await this.integrantService.findOne(message?.participant);
+            if (!integrant) {
+                let integrantMaytApi = await this.maytApi.getContactInformation(message?.participant);
+                if (integrantMaytApi?.success && integrantMaytApi?.data?.length) {
+                    let [_integrant] = integrantMaytApi?.data;
+                    let [number] = _integrant?.id.split('@');
+                    let [_, first] = number?.split('521');
+                    integrant = await this.integrantService.createIntegrant({
+                        name: _integrant.name,
+                        integrant_id: _integrant.id,
+                        phone_number: first,
+                        type: 'participant',
+                        groups: [group],
+                    });
+                }
+            }
+
+            // add the integrant/contact to the group
+            await this.groupService.updateGroupIntegrants(group, [integrant]);
+            const integrantGroup = await this.groupService.findIntegrantInGroup(group.id_group);
+            const existIntegrant = integrantGroup.integrants.find((item) => item.id_integrant === integrant.id_integrant);
+            if (existIntegrant) {
+                // send the notification
+                const webhooks: Array<IWebhookDataBase> = await this.connection.query('EXEC administracion.GetActiveWebhooks');
+                const webhookBody = {
+                    type: message?.type,
+                    subtype: message?.subtype,
+                    group,
+                    integrant,
+                };
+                
+                // send broadcast
+                webhooks.forEach((webhook: IWebhookDataBase) => {
+                    this.logger.log(webhook.url);
+                    this.logger.log(webhookBody);
+                    this.maytApi.sendWebhook(webhook.url, webhookBody);
+                });
+            }
+        }
     }
 
     // Private methods
