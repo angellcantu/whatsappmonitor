@@ -400,6 +400,11 @@ export class GroupService {
         }
     }
 
+    /**
+     * This function will retrieve the integrants by group
+     * @param groupId group identifier
+     * @returns new Object
+     */
     async findIntegrantInGroup(groupId: string) {
         return await this.groupRepository.findOne({
             where: { id_group: groupId },

@@ -271,7 +271,8 @@ export class WhatsappService {
                     this.groupInvite(response);
                 }
                 if (['group/leave'].includes(response?.message?.subtype)) {
-                    this.logger.log('User leaving');
+                    // we will remove the user in the group
+                    this.groupLeave(response);
                 }
             }
 
@@ -344,6 +345,12 @@ export class WhatsappService {
         }
     }
 
+    // Private methods
+
+    /**
+     * This function will add a user integrant in specific group
+     * @param request IWebhook interface
+     */
     private async groupInvite(request: IWebhook) {
         // get the group information
         const { message, conversation } = request;
@@ -383,7 +390,9 @@ export class WhatsappService {
             }
 
             // add the integrant/contact to the group
-            await this.groupService.updateGroupIntegrants(group, [integrant]);
+            const actualIntegrants = await this.groupService.findIntegrantInGroup(group?.id_group);
+            // update the new integrants in the group
+            await this.groupService.updateGroupIntegrants(group, [...actualIntegrants?.integrants, integrant]);
             const integrantGroup = await this.groupService.findIntegrantInGroup(group.id_group);
             const existIntegrant = integrantGroup.integrants.find((item) => item.id_integrant === integrant.id_integrant);
             if (existIntegrant) {
@@ -394,6 +403,7 @@ export class WhatsappService {
                     subtype: message?.subtype,
                     group,
                     integrant,
+                    time: new Date(),
                 };
                 
                 // send broadcast
@@ -406,7 +416,42 @@ export class WhatsappService {
         }
     }
 
-    // Private methods
+    /**
+     * This function will leave a user integrant from specific group
+     * @param request IWebhook interface
+     */
+    private async groupLeave(request: IWebhook) {
+        // get group information
+        const { message, conversation } = request;
+        const group = await this.groupService.findGroup(conversation);
+
+        if (group) {
+            // get integrants
+            const integrants: Group = await this.groupService.findIntegrantInGroup(conversation);
+            const integrant: Integrant = integrants?.integrants.find((item: Integrant) => item.id_integrant === message?.participant);
+            if (integrant) {
+                const newIntegrants: Array<Integrant> = integrants?.integrants.filter((item: Integrant) => item.id_integrant != integrant?.id_integrant);
+                // update the new integrant in the group
+                await this.groupService.updateGroupIntegrants(group, [...newIntegrants]);
+                // send the notification
+                const webhooks: Array<IWebhookDataBase> = await this.connection.query('EXEC administracion.GetActiveWebhooks');
+                const webhookBody = {
+                    type: message?.type,
+                    subtype: message?.subtype,
+                    group,
+                    integrant,
+                    time: new Date(),
+                };
+                // send broadcast
+                webhooks.forEach((webhook: IWebhookDataBase) => {
+                    this.logger.log(webhook.url);
+                    this.logger.log(webhookBody);
+                    this.maytApi.sendWebhook(webhook?.url, webhookBody);
+                });
+            }
+        }
+    }
+
     private async bot(body: IWebhook) {
         let { message, user, type, data, phone_id } = body,
             userId: string = '';
