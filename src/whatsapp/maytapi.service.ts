@@ -211,7 +211,11 @@ export class MaytApiService {
      */
     public async sendWebhook(url: string, body: any) {
         let { data }: AxiosResponse = await firstValueFrom(
-            this.http.post(url, body).pipe(
+            this.http.post(url, body, {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }).pipe(
                 catchError((error: AxiosError) => {
                     throw new HttpException(`Error executing the webhook: ${error.message}`, HttpStatus.CONFLICT);
                 })

@@ -266,7 +266,7 @@ export class WhatsappService {
             /* validate message type for group invites or leaves */
             if (response?.message && response?.message?.type == 'info') {
                 // validate subtype
-                if (['group/invite'].includes(response?.message?.subtype)) {
+                if (['group/invite', 'group/add'].includes(response?.message?.subtype)) {
                     // we will add the user in the group
                     this.groupInvite(response);
                 }
