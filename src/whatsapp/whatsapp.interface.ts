@@ -86,3 +86,15 @@ export interface IPhoneCredentials {
     updated_at?: Date | null;
     phone_id: number;
 }
+
+/* webhook response */
+export interface IWebhookDataBase {
+    id: string;
+    user_id: number;
+    url: string;
+    header_name?: string | null;
+    header_value?: string | null;
+    active: boolean;
+    created_at: Date;
+    updated_at: Date;
+}

@@ -203,6 +203,27 @@ export class MaytApiService {
         return data;
     }
 
+    /**
+     * This function will send a message an external webhook
+     * @param url URL from the external client/user
+     * @param body Object with the message
+     * @returns new Object
+     */
+    public async sendWebhook(url: string, body: any) {
+        let { data }: AxiosResponse = await firstValueFrom(
+            this.http.post(url, body, {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            }).pipe(
+                catchError((error: AxiosError) => {
+                    throw new HttpException(`Error executing the webhook: ${error.message}`, HttpStatus.CONFLICT);
+                })
+            )
+        );
+        return data;
+    }
+
     public async fetchImage(url: string) {
         let { data }: AxiosResponse = await firstValueFrom(
             this.http.get(url, { responseType: 'arraybuffer' }).pipe(
