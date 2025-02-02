@@ -200,7 +200,7 @@ export class WebhookController {
         }
     }))
     excelUpload(@UploadedFile() file: Express.Multer.File): { success: boolean } {
-        this.whatsappService.excelUpload(file);
+        this.whatsappService.excelCoahuila(file);
         return {
             success: true
         };
