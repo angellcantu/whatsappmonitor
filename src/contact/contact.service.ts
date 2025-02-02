@@ -41,7 +41,15 @@ export class ContactService {
 
     async findOne(contact_id: string): Promise<Contact | undefined> {
         try {
-            return await this.contactRepository.findOne({ where: { contact_id } });
+            return await this.contactRepository.findOne({
+                where: { contact_id },
+                order: {
+                    createdAt: {
+                        direction: 'DESC',
+                    },
+                },
+                transaction: true,
+            });
         } catch (error) {
             console.log(error);
         }

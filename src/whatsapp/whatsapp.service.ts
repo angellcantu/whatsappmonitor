@@ -24,6 +24,7 @@ import { MaytApiService } from './maytapi.service';
 import { Connection } from 'typeorm';
 import { IWebhook, IDataOptions, IWebhookDataBase } from './whatsapp.interface';
 import { FtpService } from './ftp.service';
+import * as xls from 'excel4node';
 import * as ExcelToJson from 'convert-excel-to-json';
 
 @Injectable()
@@ -405,7 +406,7 @@ export class WhatsappService {
                     integrant,
                     time: new Date(),
                 };
-                
+
                 // send broadcast
                 webhooks.forEach((webhook: IWebhookDataBase) => {
                     this.logger.log(webhook.url);
@@ -1040,6 +1041,97 @@ export class WhatsappService {
                 this.logger.log(response);
             });
         }
+    }
+
+    excelCoahuila(file: Express.Multer.File) {
+        const sheets = ExcelToJson({
+            source: file.buffer,
+            sheets: [
+                { name: 'Coahuila 29 enero FINAL', header: { rows: 1 } },
+            ],
+        });
+        const problems = ['limpieza', 'vigilancia', 'banquetas', 'alumbrado', 'baches'];
+        const items = [...sheets['Coahuila 29 enero FINAL']];
+        const uniqueMunicipalities = [...new Set(items.map(item => item.C))];
+        const municipalities = [];
+
+        uniqueMunicipalities.map((municipality: string) => {
+            const record = { name: municipality };
+            const filtered = items.filter(item => item.C === municipality);
+            if (filtered.length) {
+                record['suburbs'] = filtered;
+                municipalities.push(record);
+            }
+            return municipality;
+        });
+        //
+        municipalities.forEach(municipality => {
+            const suburbs = [...municipality.suburbs];
+            municipality.suburbs = suburbs.map(suburb => {
+                const item = {};
+                if (typeof suburb.G === 'string') {
+                    item['suburb'] = String(suburb.G).toLowerCase().replace(/[^a-zA-Z ]/g, '');
+                    const suburbProblems = String(suburb.AO).toLowerCase().replace(/[^a-zA-Z ]/g, '').split(/\s*\b\s*/);
+                    problems.forEach((attr: string) => {
+                        item[attr] = suburbProblems.includes(attr) ? 1 : 0;
+                    });
+                }
+                return item;
+            });
+        });
+        //
+        municipalities.forEach(municipality => {
+            const uniques = [];
+            municipality.suburbs.forEach(item => {
+                const index = uniques.findIndex(unique => item.suburb === unique.suburb);
+                if (index > -1) {
+                    uniques[index]['limpieza'] = uniques[index]['limpieza'] + item['limpieza'];
+                    uniques[index]['vigilancia'] = uniques[index]['limpieza'] + item['vigilancia'];
+                    uniques[index]['banquetas'] = uniques[index]['limpieza'] + item['banquetas'];
+                    uniques[index]['alumbrado'] = uniques[index]['limpieza'] + item['alumbrado'];
+                    uniques[index]['baches'] = uniques[index]['limpieza'] + item['baches'];
+                } else {
+                    uniques.push(item);
+                }
+            });
+            municipality.suburbs = uniques;
+        });
+
+        console.log(JSON.stringify(municipalities));
+
+        // creating the excel file
+        const wb = new xls.Workbook();
+        const ws = wb.addWorksheet('Sheet 1');
+
+        ws.cell(1, 1).string('#');
+        ws.cell(1, 2).string('Municipio');
+        ws.cell(1, 3).string('Colonia');
+        ws.cell(1, 4).string('Limpieza');
+        ws.cell(1, 5).string('Vigilancia');
+        ws.cell(1, 6).string('Banquetas');
+        ws.cell(1, 7).string('Alumbrado');
+        ws.cell(1, 8).string('Baches');
+
+        // loop the array
+        let index: number = 1;
+        municipalities.forEach(municipality => {
+            municipality.suburbs.forEach((suburb) => {
+                if (typeof suburb.suburb != 'undefined') {
+                    index++;
+                    this.logger.log(`Municipio: ${municipality.name}, Colonia: ${suburb.suburb}`);
+                    ws.cell(index, 1).number(index - 1);
+                    ws.cell(index, 2).string(municipality.name);
+                    ws.cell(index, 3).string(suburb.suburb);
+                    ws.cell(index, 4).number(suburb.limpieza);
+                    ws.cell(index, 5).number(suburb.vigilancia);
+                    ws.cell(index, 6).number(suburb.banquetas);
+                    ws.cell(index, 7).number(suburb.alumbrado);
+                    ws.cell(index, 8).number(suburb.baches);
+                }
+            });
+        });
+
+        wb.write('Coahuila.xlsx');
     }
 
 }
