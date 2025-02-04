@@ -1,8 +1,8 @@
-import { Controller, Get, Post, Body, Param, ParseIntPipe } from "@nestjs/common";
+import { Controller, Get, Post, Body, Param, ParseIntPipe, Patch } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiExcludeEndpoint } from '@nestjs/swagger';
 import { GroupService } from "./group.service";
 import { WhatsappService } from "src/whatsapp/whatsapp.service";
-import { CreateGroupDto, AddIntegrantDto } from './group.dto';
+import { CreateGroupDto, AddIntegrantDto, RemoveIntegrantDto } from './group.dto';
 
 @Controller('group')
 @ApiTags('Groups')
@@ -97,6 +97,12 @@ export class GroupController {
     @ApiOperation({ description: 'This service will add a new integrant in the group' })
     addIntegrant(@Body() body: AddIntegrantDto) {
         return this.groupService.addIntegrant(body);
+    }
+
+    @Patch('/remove/:id')
+    @ApiOperation({ description: 'This service will remove an integrant from a group' })
+    removeIntegrant(@Param('id', ParseIntPipe) id: number, @Body() body: RemoveIntegrantDto) {
+        return this.groupService.removeIntegrant(id, body);
     }
 
 }

@@ -203,6 +203,28 @@ export class MaytApiService {
         return data;
     }
 
+    public async removeIntegrant(params: { groupId: string, integrantId: string }) {
+        let body = {
+            conversation_id: params.groupId,
+            number: params.integrantId,
+        };
+        const { data }: AxiosResponse = await firstValueFrom(
+            this.http.post(
+                `${this.config.get<string>('INSTANCE_URL')}/${this.config.get<string>('PRODUCT_ID')}/${this.config.get<string>('PHONE_ID')}/group/remove`,
+                { ...body },
+                { headers: {
+                    'Content-Type': 'application/json',
+                    'x-maytapi-key': this.config.get<string>('API_TOKEN'),
+                } }
+            ).pipe(
+                catchError((error: AxiosError) => {
+                    throw new HttpException(error.message, HttpStatus.CONFLICT);
+                })
+            )
+        );
+        return data;
+    }
+
     /**
      * This function will send a message an external webhook
      * @param url URL from the external client/user

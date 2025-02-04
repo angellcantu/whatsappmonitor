@@ -9,7 +9,7 @@ import { ContactService } from 'src/contact/contact.service';
 import { IntegrantService } from 'src/integrant/integrant.service';
 import { Integrant } from "src/integrant/integrant.entity";
 import { IMunicipio } from "src/municipio/municipio.interface";
-import { CreateGroupDto, AddIntegrantDto } from './group.dto';
+import { CreateGroupDto, AddIntegrantDto, RemoveIntegrantDto } from './group.dto';
 import { MaytApiService } from '../whatsapp/maytapi.service';
 import { Contact } from "src/contact/contact.entity";
 
@@ -248,7 +248,11 @@ export class GroupService {
             }
 
             let integrants: Array<string> = group.integrants.map(integrant => `521${integrant}`);
-            let maytApi = await this.maytApiService.createGroup({ name: group.name, integrants: integrants });
+            let maytApi = await this.maytApiService.createGroup({
+                name: group.name,
+                integrants: integrants,
+                message: `Bienvenido al grupo: ${group?.name}!!`,
+            });
 
             if (!maytApi?.success) {
                 throw new HttpException('Error creating the group with the provider', HttpStatus.CONFLICT);
@@ -397,6 +401,35 @@ export class GroupService {
             }
         } catch (error) {
             throw new HttpException(error.toString(), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /*
+     * This function will leave or remove an integrant from a group
+     * @param object including the group and integrant identifiers
+     * @returns new object
+     */
+    async removeIntegrant(id: number, body: RemoveIntegrantDto) {
+        try {
+            const group: Group = await this.getGroupInformation(id);
+            const integrant: Integrant = group?.integrants?.find((item: Integrant) => item.id_integrant === `521${body?.number}@c.us`);
+            if (!integrant) {
+                throw new HttpException(`The user does not exist in the group ${group.name}`, HttpStatus.NOT_FOUND);
+            }
+            // filter the integrants with the integrant
+            const newIntegrants: Array<Integrant> = group?.integrants?.filter((item: Integrant) => item.id_integrant != integrant?.id_integrant);
+            // remove the integrant in the server
+            const maytApi = await this.maytApiService.removeIntegrant({ groupId: group.id_group, integrantId: integrant.id_integrant });
+            if (maytApi.success) {
+                // update the new integrants
+                await this.updateGroupIntegrants(group, [...newIntegrants]);
+                return {
+                    status: 'ok',
+                    message: 'The user was removed correctly',
+                };
+            }
+        } catch (error) {
+            throw new HttpException(error.toString(), HttpStatus.CONFLICT);
         }
     }
 
