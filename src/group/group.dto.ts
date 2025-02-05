@@ -35,6 +35,9 @@ export class GetGroupInformation {
 
 }
 
+/**
+ * Add a new integrant in the group
+ */
 export class AddIntegrantDto {
 
     @ApiProperty()
@@ -44,5 +47,16 @@ export class AddIntegrantDto {
     @ApiProperty()
     @IsNotEmpty({ message: 'The `integrants` field cannot be empty.' })
     integrants: Array<string>;
+
+}
+
+/**
+ * Remove an integrant from a group
+ */
+export class RemoveIntegrantDto {
+
+    @ApiProperty()
+    @IsNotEmpty({ message: 'The `number` field cannot be empty.' })
+    number: string;
 
 }
