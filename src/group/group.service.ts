@@ -9,7 +9,7 @@ import { ContactService } from 'src/contact/contact.service';
 import { IntegrantService } from 'src/integrant/integrant.service';
 import { Integrant } from "src/integrant/integrant.entity";
 import { IMunicipio } from "src/municipio/municipio.interface";
-import { CreateGroupDto, AddIntegrantDto, RemoveIntegrantDto } from './group.dto';
+import { CreateGroupDto, AddIntegrantDto, RemoveIntegrantDto, DirectMessageDto } from './group.dto';
 import { MaytApiService } from '../whatsapp/maytapi.service';
 import { Contact } from "src/contact/contact.entity";
 
@@ -445,6 +445,14 @@ export class GroupService {
                 integrants: true,
             },
         });
+    }
+
+    async directMessage(payload: DirectMessageDto) {
+        try {
+            return await this.maytApiService.sendMessage(payload.message, `521${payload.number}@c.us`);
+        } catch (error) {
+            console.log(error);
+        }
     }
 
 }

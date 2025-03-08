@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Param, ParseIntPipe, Patch } from "@nestjs
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiExcludeEndpoint } from '@nestjs/swagger';
 import { GroupService } from "./group.service";
 import { WhatsappService } from "src/whatsapp/whatsapp.service";
-import { CreateGroupDto, AddIntegrantDto, RemoveIntegrantDto } from './group.dto';
+import { CreateGroupDto, AddIntegrantDto, RemoveIntegrantDto, DirectMessageDto } from './group.dto';
 
 @Controller('group')
 @ApiTags('Groups')
@@ -103,6 +103,12 @@ export class GroupController {
     @ApiOperation({ description: 'This service will remove an integrant from a group' })
     removeIntegrant(@Param('id', ParseIntPipe) id: number, @Body() body: RemoveIntegrantDto) {
         return this.groupService.removeIntegrant(id, body);
+    }
+
+    @Post('/direct-message')
+    @ApiOperation({ description: 'This service will send a direct message to the user' })
+    directMessage(@Body() payload: DirectMessageDto) {
+        return this.groupService.directMessage(payload);
     }
 
 }
