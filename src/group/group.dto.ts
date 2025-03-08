@@ -1,7 +1,7 @@
 'use strict';
 
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsNumber } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsNumber, Length } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateGroupDto {
@@ -57,6 +57,21 @@ export class RemoveIntegrantDto {
 
     @ApiProperty()
     @IsNotEmpty({ message: 'The `number` field cannot be empty.' })
+    number: string;
+
+}
+
+/**
+ * Send a direct message
+ */
+export class DirectMessageDto {
+
+    @ApiProperty()
+    @IsNotEmpty({ message: 'The `message` field cannot be empty' })
+    message: string;
+
+    @ApiProperty()
+    @IsNotEmpty({ message: 'The `number` field cannot be empty' })
     number: string;
 
 }
