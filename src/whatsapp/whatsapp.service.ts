@@ -258,7 +258,6 @@ export class WhatsappService {
     }
 
     async webhookValidation(response: IWebhook) {
-        this.logger.log(response);
         let phone_id: number = response?.phone_id;
 
         if (String(response?.conversation).length > 18) {
@@ -342,7 +341,8 @@ export class WhatsappService {
         }
 
         if (String(response?.user?.id).length <= 18) {
-            return this.bot(response);
+            // return this.bot(response); TODO: discomment this line in the future
+            return this.management(response);
         }
     }
 
@@ -453,6 +453,22 @@ export class WhatsappService {
         }
     }
 
+    private async management(body: IWebhook) {
+        console.log(body);
+        const { message, user } = body;
+
+        if (message && !message?.fromMe) {
+            // get the message
+            const [request] = await this.connection.query('EXEC forms.GetLatestStatusManagement @0;', [user?.id]);
+            console.log(request);
+        }
+    }
+
+    /**
+     * This function will work with the bot
+     * @param body maytapi request
+     * @returns an object
+     */
     private async bot(body: IWebhook) {
         let { message, user, type, data, phone_id } = body,
             userId: string = '';
