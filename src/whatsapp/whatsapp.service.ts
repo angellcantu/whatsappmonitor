@@ -258,7 +258,6 @@ export class WhatsappService {
     }
 
     async webhookValidation(response: IWebhook) {
-        this.logger.log(response);
         let phone_id: number = response?.phone_id;
 
         if (String(response?.conversation).length > 18) {
@@ -342,7 +341,8 @@ export class WhatsappService {
         }
 
         if (String(response?.user?.id).length <= 18) {
-            return this.bot(response);
+            // return this.bot(response); TODO: discomment this line in the future
+            return this.management(response);
         }
     }
 
@@ -453,6 +453,33 @@ export class WhatsappService {
         }
     }
 
+    private async management(body: IWebhook) {
+        const { message, user } = body;
+
+        if (message && !message?.fromMe) {
+            // get the message
+            const text: string = message?.text.trim().toLowerCase().replace(/[^\w\s]/gi, '');
+            const pattern: RegExp = /(estatus|status)/g;
+
+            if (text.match(pattern)) {
+                const [first] = user?.id.split('@');
+                const [_, phone] = first.split('521');
+                const [request] = await this.connection.query('EXEC forms.GetLatestStatusManagement @0;', [phone]);
+
+                if (request) {
+                    this.maytApi.sendMessage(request?.whatsapp, user?.id).then(response => {
+                        console.log(response);
+                    });
+                }
+            }
+        }
+    }
+
+    /**
+     * This function will work with the bot
+     * @param body maytapi request
+     * @returns an object
+     */
     private async bot(body: IWebhook) {
         let { message, user, type, data, phone_id } = body,
             userId: string = '';
