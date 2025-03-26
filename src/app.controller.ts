@@ -5,14 +5,21 @@ import { WhatsappService } from './whatsapp/whatsapp.service';
 
 @Controller()
 export class AppController {
-  constructor(
-    private readonly appService: AppService,
-    // private readonly userService: UserService
-    private readonly whatsappService: WhatsappService
-    ) {}
+	
+	constructor(
+		private readonly appService: AppService,
+		// private readonly userService: UserService
+		private readonly whatsappService: WhatsappService
+	) { }
 
-  @Get()
-  async getHello(): Promise<any> {
-    return { message: 'Hello' } 
-  }
+	@Get()
+	async getHello(): Promise<any> {
+		return { message: 'Hello' }
+	}
+
+	@Get('/health')
+	health(): { success: boolean } {
+		return { success: true };
+	}
+
 }
