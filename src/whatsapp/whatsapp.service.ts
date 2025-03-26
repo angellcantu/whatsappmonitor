@@ -454,13 +454,24 @@ export class WhatsappService {
     }
 
     private async management(body: IWebhook) {
-        console.log(body);
         const { message, user } = body;
 
         if (message && !message?.fromMe) {
             // get the message
-            const [request] = await this.connection.query('EXEC forms.GetLatestStatusManagement @0;', [user?.id]);
-            console.log(request);
+            const text: string = message?.text.trim().toLowerCase().replace(/[^\w\s]/gi, '');
+            const pattern: RegExp = /(estatus|status)/g;
+
+            if (text.match(pattern)) {
+                const [first] = user?.id.split('@');
+                const [_, phone] = first.split('521');
+                const [request] = await this.connection.query('EXEC forms.GetLatestStatusManagement @0;', [phone]);
+
+                if (request) {
+                    this.maytApi.sendMessage(request?.whatsapp, user?.id).then(response => {
+                        console.log(response);
+                    });
+                }
+            }
         }
     }
 
